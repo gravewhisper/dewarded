@@ -6,6 +6,7 @@ import {
   type Medal,
   type RegionCounts,
   type SteamCheck,
+  type SteamIdentity,
 } from '#/domain'
 import { config } from './config'
 import { getLatestSteamCheck, pauseOpenDota, reserveOpenDotaCalls, type CallLimits } from './db'
@@ -116,20 +117,19 @@ function planCheck(previous: SteamCheck | null, now: Date): Plan {
 }
 
 export async function checkSteamAccount(
-  steamId64: string,
+  { steamId64, steamKey }: SteamIdentity,
   { now = new Date(), limits = OPENDOTA_LIMITS }: CheckOptions = {},
 ): Promise<CheckResult> {
-  const plan = planCheck(await getLatestSteamCheck(steamId64), now)
+  const plan = planCheck(await getLatestSteamCheck(steamKey), now)
   if (plan.kind === 'reuse') return { ok: true, check: plan.check }
   const reservation = await reserveOpenDotaCalls(plan.calls, now, limits)
   if (reservation === 'paused') return { ok: false, error: 'rate_limited' }
   if (reservation === 'busy') return { ok: false, error: 'busy' }
-  const accountId = steamId64ToAccountId(steamId64)
-  const result = await fetchMedal(accountId, plan.keptRegion, now)
+  const result = await fetchMedal(steamId64ToAccountId(steamId64), plan.keptRegion, now)
   if (!result.ok && result.error === 'rate_limited') {
     await pauseOpenDota(new Date(now.getTime() + RATE_LIMIT_PAUSE_MS))
   }
   if (!result.ok) return result
   const { ok: _, ...found } = result
-  return { ok: true, check: { steamId64, accountId, ...found, checkedAt: now } }
+  return { ok: true, check: { steamKey, ...found, checkedAt: now } }
 }

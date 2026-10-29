@@ -24,6 +24,9 @@ import {
   regionLabel,
   regionShare,
   steamId64ToAccountId,
+  ownView,
+  type SteamId64,
+  type SteamKey,
 } from './domain.ts'
 
 import REGION_NAMES from './server/regions.json' with { type: 'json' }
@@ -35,8 +38,11 @@ test('a Steam ID is exactly 17 digits', () => {
   }
 })
 
+const STEAM_KEY = '1ca540d4b0ce70323451fe02ee1d083b45bae538614a1d7bd3a609ed557ee3dc' as SteamKey
+const OTHER_STEAM_KEY = '9f1c2a6e0b7d4c3e8a5f6b1d2c3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e' as SteamKey
+
 test('steamId64 converts to the 32-bit account id', () => {
-  assert.equal(steamId64ToAccountId('76561198065514372'), 105248644)
+  assert.equal(steamId64ToAccountId('76561198065514372' as SteamId64), 105248644)
 })
 
 test('rank_tier 80 with leaderboard rank is a ranked Immortal', () => {
@@ -146,8 +152,7 @@ test('every medal art path points at a vendored image', async () => {
 test('public verification carries no Steam identifiers', () => {
   const shown = publicVerification({
     redditUsername: 'someone',
-    steamId64: '76561198065514372',
-    accountId: 105248644,
+    steamKey: STEAM_KEY,
     medal: { kind: 'immortal', leaderboardRank: 16 },
     region: { name: 'Europe', games: 1506, share: 1506 / 1559 },
     checkedAt: new Date(0),
@@ -161,7 +166,7 @@ test('public verification carries no Steam identifiers', () => {
     'region',
     'selfReportedMmr',
   ])
-  assert.doesNotMatch(JSON.stringify(shown), /76561198065514372|105248644/)
+  assert.doesNotMatch(JSON.stringify(shown), new RegExp(STEAM_KEY))
   assert.deepEqual(shown.region, { name: 'Europe', percent: 97 })
 })
 
@@ -182,8 +187,7 @@ test('short region shows the name and share', () => {
 
 const immortalCheck: MedalCheck = {
   redditUsername: 'someone',
-  steamId64: '76561198065514372',
-  accountId: 105248644,
+  steamKey: STEAM_KEY,
   medal: { kind: 'immortal', leaderboardRank: 16 },
   region: null,
   checkedAt: new Date(0),
@@ -209,17 +213,17 @@ test('MMR ranges read as approximate', () => {
 })
 
 test('a recheck of the same Steam account keeps the self-reported MMR', () => {
-  assert.equal(carriedMmr({ steamId64: immortalCheck.steamId64, selfReportedMmr: 9200 }, immortalCheck), 9200)
+  assert.equal(carriedMmr({ steamKey: STEAM_KEY, selfReportedMmr: 9200 }, immortalCheck), 9200)
 })
 
 test('linking a different Steam account clears the self-reported MMR', () => {
-  assert.equal(carriedMmr({ steamId64: '76561198000000001', selfReportedMmr: 9200 }, immortalCheck), null)
+  assert.equal(carriedMmr({ steamKey: OTHER_STEAM_KEY, selfReportedMmr: 9200 }, immortalCheck), null)
 })
 
 test('a recheck that drops below Immortal clears the self-reported MMR', () => {
   const legend: MedalCheck = { ...immortalCheck, medal: { kind: 'ranked', tier: 5, stars: 3 } }
-  assert.equal(carriedMmr({ steamId64: immortalCheck.steamId64, selfReportedMmr: 9200 }, legend), null)
-  assert.equal(carriedMmr({ steamId64: immortalCheck.steamId64, selfReportedMmr: 9200 }, { ...immortalCheck, medal: { kind: 'uncalibrated' } }), null)
+  assert.equal(carriedMmr({ steamKey: STEAM_KEY, selfReportedMmr: 9200 }, legend), null)
+  assert.equal(carriedMmr({ steamKey: STEAM_KEY, selfReportedMmr: 9200 }, { ...immortalCheck, medal: { kind: 'uncalibrated' } }), null)
 })
 
 test('a first link has no self-reported MMR', () => {
@@ -321,8 +325,7 @@ test('public claim carries no Steam identifiers', () => {
   const shown = publicClaim({
     id: 'k3x7q2mwab' as ClaimId,
     claimedRedditUsername: 'someone',
-    steamId64: '76561198065514372',
-    accountId: 105248644,
+    steamKey: STEAM_KEY,
     medal: { kind: 'immortal', leaderboardRank: 4151 },
     region: { name: 'Europe', games: 1506, share: 1506 / 1559 },
     checkedAt: new Date(0),
@@ -337,6 +340,22 @@ test('public claim carries no Steam identifiers', () => {
     'region',
     'selfReportedMmr',
   ])
-  assert.doesNotMatch(JSON.stringify(shown), /76561198065514372|105248644/)
+  assert.doesNotMatch(JSON.stringify(shown), new RegExp(STEAM_KEY))
   assert.deepEqual(shown.region, { name: 'Europe', percent: 97 })
+})
+
+test("an owner's own view of a page carries no Steam key", () => {
+  const own = ownView({
+    id: 'k3x7q2mwab' as ClaimId,
+    claimedRedditUsername: 'someone',
+    steamKey: STEAM_KEY,
+    medal: { kind: 'immortal', leaderboardRank: 4151 },
+    region: null,
+    checkedAt: new Date(0),
+    regionCheckedAt: new Date(0),
+    selfReportedMmr: 9000,
+  })
+  assert.equal('steamKey' in own, false)
+  assert.doesNotMatch(JSON.stringify(own), new RegExp(STEAM_KEY))
+  assert.equal(own.claimedRedditUsername, 'someone')
 })

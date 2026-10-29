@@ -1,73 +1,115 @@
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
-import { createClient, type Client, type Row, type Transaction } from '@libsql/client'
+import { createClient, type Client, type Row, type Transaction, type Value } from '@libsql/client'
 import { randomBytes } from 'node:crypto'
 import {
   CLAIM_ID_LENGTH,
   carriedMmr,
   claimIdFromBytes,
   mmrAllowed,
+  parseSteamId64,
   type Claim,
   type ClaimId,
   type MedalCheck,
   type Medal,
   type Region,
   type SteamCheck,
+  type SteamKey,
   type Verification,
 } from '#/domain'
 import { config } from './config'
+import { deriveSteamKey } from './steamKey'
 
-let clientPromise: Promise<Client> | null = null
+type KeyedTable = { name: string; columns: string; ownColumns: string[] }
 
-function getDb(): Promise<Client> {
-  clientPromise ??= open()
-  return clientPromise
-}
-
-async function open(): Promise<Client> {
-  if (config.databaseUrl.startsWith('file:')) {
-    mkdirSync(dirname(config.databaseUrl.slice('file:'.length)), { recursive: true })
-  }
-  const client = createClient({
-    url: config.databaseUrl,
-    authToken: config.databaseAuthToken,
-  })
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS verifications (
+const KEYED_TABLES: KeyedTable[] = [
+  {
+    name: 'verifications',
+    columns: `(
       reddit_username TEXT PRIMARY KEY,
-      steam_id64 TEXT NOT NULL,
-      account_id INTEGER NOT NULL,
+      steam_key TEXT NOT NULL,
       medal TEXT NOT NULL,
       region TEXT,
       checked_at INTEGER NOT NULL,
       self_reported_mmr INTEGER,
-      region_checked_at INTEGER
-    )
-  `)
-  const { rows: columns } = await client.execute('PRAGMA table_info(verifications)')
-  if (!columns.some((column) => column.name === 'self_reported_mmr')) {
-    await client.execute('ALTER TABLE verifications ADD COLUMN self_reported_mmr INTEGER')
-  }
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS claims (
+      region_checked_at INTEGER NOT NULL
+    )`,
+    ownColumns: ['reddit_username'],
+  },
+  {
+    name: 'claims',
+    columns: `(
       id TEXT PRIMARY KEY,
-      steam_id64 TEXT UNIQUE NOT NULL,
-      account_id INTEGER NOT NULL,
+      steam_key TEXT UNIQUE NOT NULL,
       claimed_reddit_username TEXT NOT NULL,
       medal TEXT NOT NULL,
       region TEXT,
       checked_at INTEGER NOT NULL,
       self_reported_mmr INTEGER,
-      region_checked_at INTEGER
-    )
-  `)
-  for (const table of ['verifications', 'claims']) {
-    const { rows } = await client.execute(`PRAGMA table_info(${table})`)
-    if (!rows.some((column) => column.name === 'region_checked_at')) {
-      await client.execute(`ALTER TABLE ${table} ADD COLUMN region_checked_at INTEGER`)
-    }
-    await client.execute(`UPDATE ${table} SET region_checked_at = checked_at WHERE region_checked_at IS NULL`)
+      region_checked_at INTEGER NOT NULL
+    )`,
+    ownColumns: ['id', 'claimed_reddit_username'],
+  },
+]
+
+async function hasSteamIdColumn(tx: Transaction, table: string): Promise<boolean> {
+  const { rows } = await tx.execute(`PRAGMA table_info(${table})`)
+  return rows.some((column) => column.name === 'steam_id64')
+}
+
+async function keyedRow(table: KeyedTable, row: Row, pepper: string): Promise<Record<string, Value>> {
+  const steamId64 = parseSteamId64(String(row.steam_id64))
+  if (!steamId64) throw new Error(`${table.name} has a row whose steam_id64 is not a Steam ID`)
+  return {
+    steam_key: await deriveSteamKey(steamId64, pepper),
+    ...Object.fromEntries(table.ownColumns.map((column) => [column, row[column]])),
+    medal: row.medal,
+    region: row.region,
+    checked_at: row.checked_at,
+    self_reported_mmr: row.self_reported_mmr ?? null,
+    region_checked_at: row.region_checked_at ?? row.checked_at,
   }
+}
+
+async function replaceSteamIdsWithKeys(client: Client, pepper: string): Promise<boolean> {
+  const tx = await client.transaction('write')
+  try {
+    const pending: KeyedTable[] = []
+    for (const table of KEYED_TABLES) {
+      if (await hasSteamIdColumn(tx, table.name)) pending.push(table)
+    }
+    if (pending.length === 0) return false
+    await tx.execute('PRAGMA secure_delete = ON')
+    for (const table of pending) {
+      const keyed = `${table.name}_keyed`
+      await tx.execute(`CREATE TABLE ${keyed} ${table.columns}`)
+      const { rows } = await tx.execute(`SELECT * FROM ${table.name}`)
+      for (const row of rows) {
+        const values = await keyedRow(table, row, pepper)
+        const columns = Object.keys(values)
+        await tx.execute({
+          sql: `INSERT INTO ${keyed} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
+          args: Object.values(values),
+        })
+      }
+      await tx.execute(`DROP TABLE ${table.name}`)
+      await tx.execute(`ALTER TABLE ${keyed} RENAME TO ${table.name}`)
+    }
+    await tx.commit()
+    return true
+  } finally {
+    tx.close()
+  }
+}
+
+export async function openDatabase(url: string, authToken: string | undefined, pepper: string): Promise<Client> {
+  const localFile = url.startsWith('file:')
+  if (localFile) mkdirSync(dirname(url.slice('file:'.length)), { recursive: true })
+  const client = createClient({ url, authToken })
+  for (const table of KEYED_TABLES) {
+    await client.execute(`CREATE TABLE IF NOT EXISTS ${table.name} ${table.columns}`)
+  }
+  if ((await replaceSteamIdsWithKeys(client, pepper)) && localFile) await client.execute('VACUUM')
   await client.execute(
     'CREATE TABLE IF NOT EXISTS opendota_calls (at INTEGER NOT NULL, calls INTEGER NOT NULL)',
   )
@@ -78,10 +120,16 @@ async function open(): Promise<Client> {
   return client
 }
 
+let clientPromise: Promise<Client> | null = null
+
+function getDb(): Promise<Client> {
+  clientPromise ??= openDatabase(config.databaseUrl, config.databaseAuthToken, config.steamIdPepper)
+  return clientPromise
+}
+
 function toSteamCheck(row: Row): SteamCheck {
   return {
-    steamId64: String(row.steam_id64),
-    accountId: Number(row.account_id),
+    steamKey: String(row.steam_key) as SteamKey,
     medal: JSON.parse(String(row.medal)) as Medal,
     region: row.region === null ? null : (JSON.parse(String(row.region)) as Region),
     regionCheckedAt: new Date(Number(row.region_checked_at)),
@@ -142,11 +190,10 @@ export function saveVerification(check: MedalCheck): Promise<void> {
   return inWriteTransaction(async (tx) => {
     const previous = await readVerification(tx, check.redditUsername)
     await tx.execute({
-      sql: `INSERT INTO verifications (reddit_username, steam_id64, account_id, medal, region, checked_at, self_reported_mmr, region_checked_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      sql: `INSERT INTO verifications (reddit_username, steam_key, medal, region, checked_at, self_reported_mmr, region_checked_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (reddit_username) DO UPDATE SET
-              steam_id64 = excluded.steam_id64,
-              account_id = excluded.account_id,
+              steam_key = excluded.steam_key,
               medal = excluded.medal,
               region = excluded.region,
               checked_at = excluded.checked_at,
@@ -154,8 +201,7 @@ export function saveVerification(check: MedalCheck): Promise<void> {
               region_checked_at = excluded.region_checked_at`,
       args: [
         check.redditUsername,
-        check.steamId64,
-        check.accountId,
+        check.steamKey,
         JSON.stringify(check.medal),
         check.region === null ? null : JSON.stringify(check.region),
         check.checkedAt.getTime(),
@@ -193,27 +239,27 @@ export function deleteVerification(redditUsername: string): Promise<void> {
   })
 }
 
-async function readClaim(db: Client | Transaction, steamId64: string): Promise<Claim | null> {
+async function readClaim(db: Client | Transaction, steamKey: SteamKey): Promise<Claim | null> {
   const { rows } = await db.execute({
-    sql: 'SELECT * FROM claims WHERE steam_id64 = ?',
-    args: [steamId64],
+    sql: 'SELECT * FROM claims WHERE steam_key = ?',
+    args: [steamKey],
   })
   return rows[0] ? toClaim(rows[0]) : null
 }
 
-export async function getLatestSteamCheck(steamId64: string): Promise<SteamCheck | null> {
+export async function getLatestSteamCheck(steamKey: SteamKey): Promise<SteamCheck | null> {
   const { rows } = await (await getDb()).execute({
-    sql: `SELECT steam_id64, account_id, medal, region, region_checked_at, checked_at FROM claims WHERE steam_id64 = ?
+    sql: `SELECT steam_key, medal, region, region_checked_at, checked_at FROM claims WHERE steam_key = ?
           UNION ALL
-          SELECT steam_id64, account_id, medal, region, region_checked_at, checked_at FROM verifications WHERE steam_id64 = ?
+          SELECT steam_key, medal, region, region_checked_at, checked_at FROM verifications WHERE steam_key = ?
           ORDER BY checked_at DESC LIMIT 1`,
-    args: [steamId64, steamId64],
+    args: [steamKey, steamKey],
   })
   return rows[0] ? toSteamCheck(rows[0]) : null
 }
 
-export async function getClaimBySteamId(steamId64: string): Promise<Claim | null> {
-  return readClaim(await getDb(), steamId64)
+export async function getClaimBySteamKey(steamKey: SteamKey): Promise<Claim | null> {
+  return readClaim(await getDb(), steamKey)
 }
 
 export async function getClaim(id: ClaimId): Promise<Claim | null> {
@@ -226,13 +272,12 @@ export async function getClaim(id: ClaimId): Promise<Claim | null> {
 
 export function saveClaim(check: SteamCheck, claimedRedditUsername: string): Promise<ClaimId> {
   return inWriteTransaction(async (tx) => {
-    const previous = await readClaim(tx, check.steamId64)
+    const previous = await readClaim(tx, check.steamKey)
     const id = previous?.id ?? claimIdFromBytes(randomBytes(CLAIM_ID_LENGTH))
     await tx.execute({
-      sql: `INSERT INTO claims (id, steam_id64, account_id, claimed_reddit_username, medal, region, checked_at, self_reported_mmr, region_checked_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (steam_id64) DO UPDATE SET
-              account_id = excluded.account_id,
+      sql: `INSERT INTO claims (id, steam_key, claimed_reddit_username, medal, region, checked_at, self_reported_mmr, region_checked_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (steam_key) DO UPDATE SET
               claimed_reddit_username = excluded.claimed_reddit_username,
               medal = excluded.medal,
               region = excluded.region,
@@ -241,8 +286,7 @@ export function saveClaim(check: SteamCheck, claimedRedditUsername: string): Pro
               region_checked_at = excluded.region_checked_at`,
       args: [
         id,
-        check.steamId64,
-        check.accountId,
+        check.steamKey,
         claimedRedditUsername,
         JSON.stringify(check.medal),
         check.region === null ? null : JSON.stringify(check.region),
@@ -255,46 +299,46 @@ export function saveClaim(check: SteamCheck, claimedRedditUsername: string): Pro
   })
 }
 
-export function renameClaim(steamId64: string, claimedRedditUsername: string): Promise<boolean> {
+export function renameClaim(steamKey: SteamKey, claimedRedditUsername: string): Promise<boolean> {
   return inWriteTransaction(async (tx) => {
     const { rowsAffected } = await tx.execute({
-      sql: 'UPDATE claims SET claimed_reddit_username = ? WHERE steam_id64 = ?',
-      args: [claimedRedditUsername, steamId64],
+      sql: 'UPDATE claims SET claimed_reddit_username = ? WHERE steam_key = ?',
+      args: [claimedRedditUsername, steamKey],
     })
     return rowsAffected > 0
   })
 }
 
-export function setClaimMmr(steamId64: string, mmr: number | null): Promise<MmrSaveResult> {
+export function setClaimMmr(steamKey: SteamKey, mmr: number | null): Promise<MmrSaveResult> {
   return inWriteTransaction(async (tx) => {
-    const current = await readClaim(tx, steamId64)
+    const current = await readClaim(tx, steamKey)
     if (!current) return 'not_linked'
     if (!mmrAllowed(current.medal)) return 'mmr_not_immortal'
     await tx.execute({
-      sql: 'UPDATE claims SET self_reported_mmr = ? WHERE steam_id64 = ?',
-      args: [mmr, steamId64],
+      sql: 'UPDATE claims SET self_reported_mmr = ? WHERE steam_key = ?',
+      args: [mmr, steamKey],
     })
     return 'saved'
   })
 }
 
-export type Person = { steamId64: string } | { redditUsername: string }
+export type Person = { steamKey: SteamKey } | { redditUsername: string }
 
 export function deletePersonData(person: Person): Promise<void> {
   return inWriteTransaction(async (tx) => {
-    const steamId64 =
-      'steamId64' in person
-        ? person.steamId64
-        : (await readVerification(tx, person.redditUsername))?.steamId64
+    const steamKey =
+      'steamKey' in person
+        ? person.steamKey
+        : (await readVerification(tx, person.redditUsername))?.steamKey
     if ('redditUsername' in person) {
       await tx.execute({
         sql: 'DELETE FROM verifications WHERE reddit_username = ?',
         args: [person.redditUsername],
       })
     }
-    if (steamId64 === undefined) return
-    await tx.execute({ sql: 'DELETE FROM verifications WHERE steam_id64 = ?', args: [steamId64] })
-    await tx.execute({ sql: 'DELETE FROM claims WHERE steam_id64 = ?', args: [steamId64] })
+    if (steamKey === undefined) return
+    await tx.execute({ sql: 'DELETE FROM verifications WHERE steam_key = ?', args: [steamKey] })
+    await tx.execute({ sql: 'DELETE FROM claims WHERE steam_key = ?', args: [steamKey] })
   })
 }
 

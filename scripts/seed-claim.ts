@@ -1,12 +1,15 @@
-import { parseRedditUsername } from '#/domain'
-import { getClaimBySteamId } from '#/server/db'
+import { parseRedditUsername, parseSteamId64 } from '#/domain'
+import { getClaimBySteamKey } from '#/server/db'
 import { claimAccount } from '#/server/link'
+import { steamIdentity } from '#/server/steamKey'
 
-const [name, steamId64] = process.argv.slice(2)
+const [name, rawSteamId64] = process.argv.slice(2)
 const username = parseRedditUsername(name ?? '')
-if (!username || !/^\d{17}$/.test(steamId64 ?? '')) {
+const steamId64 = parseSteamId64(rawSteamId64 ?? '')
+if (!username || !steamId64) {
   console.error('usage: pnpm seed-claim <reddit-username> <steamId64>')
   process.exit(1)
 }
-const result = await claimAccount(steamId64, username)
-console.log(JSON.stringify(result.ok ? await getClaimBySteamId(steamId64) : result, null, 2))
+const steam = await steamIdentity(steamId64)
+const result = await claimAccount(steam, username)
+console.log(JSON.stringify(result.ok ? await getClaimBySteamKey(steam.steamKey) : result, null, 2))

@@ -1,19 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { config } from '#/server/config'
-import { getClaimBySteamId } from '#/server/db'
+import { getClaimBySteamKey } from '#/server/db'
 import { linkAccount } from '#/server/link'
 import { linkError, redirectTo } from '#/server/http'
 import { consumeOnce, readSession, writeSession } from '#/server/session'
 import { verifySteamCallback } from '#/server/steam'
+import { steamIdentity } from '#/server/steamKey'
 
 async function signInForClaim(
   query: URLSearchParams,
   steamNonce: string | undefined,
 ): Promise<Response> {
-  const steam = await verifySteamCallback(query, steamNonce)
-  if (!steam.ok) return linkError(steam.error)
+  const verified = await verifySteamCallback(query, steamNonce)
+  if (!verified.ok) return linkError(verified.error)
+  const steam = await steamIdentity(verified.steamId64)
   writeSession({ steamId64: steam.steamId64 })
-  return redirectTo((await getClaimBySteamId(steam.steamId64)) ? '/me' : '/link')
+  return redirectTo((await getClaimBySteamKey(steam.steamKey)) ? '/me' : '/link')
 }
 
 async function linkToReddit(
@@ -22,10 +24,12 @@ async function linkToReddit(
 ): Promise<Response> {
   const { redditUsername } = readSession()
   if (!redditUsername) return linkError('reddit_first')
-  const steam = await verifySteamCallback(query, steamNonce)
-  if (!steam.ok) return linkError(steam.error)
-  const linked = await linkAccount(redditUsername, steam.steamId64)
+  const verified = await verifySteamCallback(query, steamNonce)
+  if (!verified.ok) return linkError(verified.error)
+  const steam = await steamIdentity(verified.steamId64)
+  const linked = await linkAccount(redditUsername, steam)
   if (!linked.ok) return linkError(linked.error)
+  writeSession({ redditUsername, steamId64: steam.steamId64 })
   return redirectTo(`/u/${encodeURIComponent(redditUsername)}`)
 }
 

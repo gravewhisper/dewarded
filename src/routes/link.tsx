@@ -1,6 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ClaimNameForm } from '#/components/ClaimNameForm'
-import type { Claim, Verification } from '#/domain'
+import type { Claim, OwnView, Verification } from '#/domain'
 import { errorSearch } from '#/format'
 import { errorMessage } from '#/messages'
 import { getAccount } from '#/serverFns'
@@ -101,7 +101,7 @@ function BacklinkSteps({
   error,
 }: {
   signedIn: boolean
-  claim: Claim | null
+  claim: OwnView<Claim> | null
   error: string | null
 }) {
   const steps: Step[] = [
@@ -162,7 +162,7 @@ function RedditSteps({
   error,
 }: {
   redditUsername: string | null
-  verification: Verification | null
+  verification: OwnView<Verification> | null
   devLogin: boolean
   error: string | null
 }) {

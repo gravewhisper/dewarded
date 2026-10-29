@@ -1,12 +1,13 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server'
+import type { SteamId64 } from '#/domain'
 import { config } from './config'
 
 export type Session = {
   redditUsername?: string
   redditState?: string
   steamNonce?: string
-  steamId64?: string
+  steamId64?: SteamId64
 }
 
 const COOKIE = 'dewarded_session'

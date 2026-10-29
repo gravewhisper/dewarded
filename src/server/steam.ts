@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto'
+import { parseSteamId64, type SteamId64 } from '#/domain'
 import { callbackUrl, config } from './config'
 
 const OP_ENDPOINT = 'https://steamcommunity.com/openid/login'
@@ -33,15 +34,15 @@ export type SteamVerifyError = 'steam_session' | 'malformed' | 'rejected' | 'unr
 export async function verifySteamCallback(
   query: URLSearchParams,
   sessionNonce: string | undefined,
-): Promise<{ ok: true; steamId64: string } | { ok: false; error: SteamVerifyError }> {
+): Promise<{ ok: true; steamId64: SteamId64 } | { ok: false; error: SteamVerifyError }> {
   if (query.get('openid.mode') !== 'id_res') return { ok: false, error: 'malformed' }
   if (!sessionNonce || query.get('openid.return_to') !== returnTo(sessionNonce)) {
     return { ok: false, error: 'steam_session' }
   }
   if (query.get('openid.op_endpoint') !== OP_ENDPOINT) return { ok: false, error: 'malformed' }
   const claimedId = query.get('openid.claimed_id') ?? ''
-  const match = CLAIMED_ID.exec(claimedId)
-  if (!match || query.get('openid.identity') !== claimedId) {
+  const steamId64 = parseSteamId64(CLAIMED_ID.exec(claimedId)?.[1] ?? '')
+  if (!steamId64 || query.get('openid.identity') !== claimedId) {
     return { ok: false, error: 'malformed' }
   }
   // check_authentication only vouches for the signed fields, so an unsigned
@@ -70,5 +71,5 @@ export async function verifySteamCallback(
     return { ok: false, error: 'unreachable' }
   }
   const valid = text.split('\n').some((line) => line.trim() === 'is_valid:true')
-  return valid ? { ok: true, steamId64: match[1] } : { ok: false, error: 'rejected' }
+  return valid ? { ok: true, steamId64 } : { ok: false, error: 'rejected' }
 }

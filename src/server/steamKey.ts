@@ -16,3 +16,7 @@ export function deriveSteamKey(steamId64: SteamId64, pepper: string): Promise<St
 export async function steamIdentity(steamId64: SteamId64): Promise<SteamIdentity> {
   return { steamId64, steamKey: await deriveSteamKey(steamId64, config.steamIdPepper) }
 }
+
+export async function provenSteam({ steamId64 }: { steamId64?: SteamId64 }): Promise<SteamIdentity | null> {
+  return steamId64 ? steamIdentity(steamId64) : null
+}

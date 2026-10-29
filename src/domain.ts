@@ -27,8 +27,7 @@ export function parseSteamId64(raw: string): SteamId64 | null {
 }
 
 export type SteamCheck = {
-  steamId64: string
-  accountId: number
+  steamKey: SteamKey
   medal: Medal
   region: Region | null
   regionCheckedAt: Date
@@ -40,6 +39,12 @@ export type KnownRegion = Pick<SteamCheck, 'region' | 'regionCheckedAt'>
 export type MedalCheck = SteamCheck & { redditUsername: string }
 
 export type Verification = MedalCheck & { selfReportedMmr: number | null }
+
+export type OwnView<T extends SteamCheck> = Omit<T, 'steamKey'>
+
+export function ownView<T extends SteamCheck>({ steamKey: _, ...view }: T): OwnView<T> {
+  return view
+}
 
 export type PublicVerification = Pick<
   Verification,
@@ -124,10 +129,10 @@ export function mmrAllowed(medal: Medal): boolean {
 }
 
 export function carriedMmr(
-  previous: Pick<Verification, 'steamId64' | 'selfReportedMmr'> | null,
+  previous: Pick<Verification, 'steamKey' | 'selfReportedMmr'> | null,
   next: SteamCheck,
 ): number | null {
-  if (!previous || previous.steamId64 !== next.steamId64 || !mmrAllowed(next.medal)) return null
+  if (!previous || previous.steamKey !== next.steamKey || !mmrAllowed(next.medal)) return null
   return previous.selfReportedMmr
 }
 
@@ -214,7 +219,7 @@ export function medalTint(medal: Medal): string {
   return MEDAL_TINTS[medalRank(medal)]
 }
 
-export function steamId64ToAccountId(steamId64: string): number {
+export function steamId64ToAccountId(steamId64: SteamId64): number {
   return Number(BigInt(steamId64) - STEAM_ID64_BASE)
 }
 
