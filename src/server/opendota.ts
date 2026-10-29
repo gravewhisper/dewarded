@@ -8,7 +8,7 @@ import {
   type SteamCheck,
 } from '#/domain'
 import { config } from './config'
-import { getLatestSteamCheck, reserveOpenDotaCalls, type CallLimits } from './db'
+import { getLatestSteamCheck, pauseOpenDota, reserveOpenDotaCalls, type CallLimits } from './db'
 import regionNames from './regions.json'
 
 const API = 'https://api.opendota.com/api'
@@ -16,6 +16,8 @@ const API = 'https://api.opendota.com/api'
 export const MEDAL_REUSE_MS = 60 * 60 * 1000
 
 export const REGION_REUSE_MS = 24 * 60 * 60 * 1000
+
+export const RATE_LIMIT_PAUSE_MS = 60 * 1000
 
 export const OPENDOTA_LIMITS: CallLimits = { perMinute: 50, perDay: 2800 }
 
@@ -47,16 +49,16 @@ async function getJson<T>(path: string): Promise<T> {
 }
 
 async function requestRefresh(accountId: number): Promise<void> {
-  try {
-    const res = await fetch(`${API}/players/${accountId}/refresh`, {
-      method: 'POST',
-      headers: { 'User-Agent': config.userAgent },
-      signal: AbortSignal.timeout(5000),
-    })
-    if (!res.ok) console.error(`OpenDota refresh returned ${res.status}`)
-  } catch (err) {
+  const res = await fetch(`${API}/players/${accountId}/refresh`, {
+    method: 'POST',
+    headers: { 'User-Agent': config.userAgent },
+    signal: AbortSignal.timeout(5000),
+  }).catch((err: unknown) => {
     console.error(err)
-  }
+    return null
+  })
+  if (res?.status === 429) throw new RateLimited()
+  if (res && !res.ok) console.error(`OpenDota refresh returned ${res.status}`)
 }
 
 async function fetchRegion(accountId: number, now: Date): Promise<KnownRegion> {
@@ -69,8 +71,8 @@ export async function fetchMedal(
   keptRegion: KnownRegion | null = null,
   now = new Date(),
 ): Promise<OpenDotaResult> {
-  await requestRefresh(accountId)
   try {
+    await requestRefresh(accountId)
     const [player, known] = await Promise.all([
       getJson<PlayerResponse>(`/players/${accountId}`),
       keptRegion ?? fetchRegion(accountId, now),
@@ -119,9 +121,14 @@ export async function checkSteamAccount(
 ): Promise<CheckResult> {
   const plan = planCheck(await getLatestSteamCheck(steamId64), now)
   if (plan.kind === 'reuse') return { ok: true, check: plan.check }
-  if (!(await reserveOpenDotaCalls(plan.calls, now, limits))) return { ok: false, error: 'busy' }
+  const reservation = await reserveOpenDotaCalls(plan.calls, now, limits)
+  if (reservation === 'paused') return { ok: false, error: 'rate_limited' }
+  if (reservation === 'busy') return { ok: false, error: 'busy' }
   const accountId = steamId64ToAccountId(steamId64)
   const result = await fetchMedal(accountId, plan.keptRegion, now)
+  if (!result.ok && result.error === 'rate_limited') {
+    await pauseOpenDota(new Date(now.getTime() + RATE_LIMIT_PAUSE_MS))
+  }
   if (!result.ok) return result
   const { ok: _, ...found } = result
   return { ok: true, check: { steamId64, accountId, ...found, checkedAt: now } }

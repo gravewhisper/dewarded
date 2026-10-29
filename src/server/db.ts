@@ -72,6 +72,9 @@ async function open(): Promise<Client> {
     'CREATE TABLE IF NOT EXISTS opendota_calls (at INTEGER NOT NULL, calls INTEGER NOT NULL)',
   )
   await client.execute('CREATE INDEX IF NOT EXISTS opendota_calls_at ON opendota_calls (at)')
+  await client.execute(
+    'CREATE TABLE IF NOT EXISTS opendota_pause (id INTEGER PRIMARY KEY CHECK (id = 1), until INTEGER NOT NULL)',
+  )
   return client
 }
 
@@ -300,9 +303,17 @@ const DAY_MS = 24 * 60 * MINUTE_MS
 
 export type CallLimits = { perMinute: number; perDay: number }
 
-export function reserveOpenDotaCalls(calls: number, now: Date, limits: CallLimits): Promise<boolean> {
+export type Reservation = 'granted' | 'busy' | 'paused'
+
+export function reserveOpenDotaCalls(
+  calls: number,
+  now: Date,
+  limits: CallLimits,
+): Promise<Reservation> {
   const at = now.getTime()
   return inWriteTransaction(async (tx) => {
+    const { rows } = await tx.execute({ sql: 'SELECT 1 FROM opendota_pause WHERE until > ?', args: [at] })
+    if (rows.length > 0) return 'paused'
     await tx.execute({ sql: 'DELETE FROM opendota_calls WHERE at <= ?', args: [at - DAY_MS] })
     const { rowsAffected } = await tx.execute({
       sql: `INSERT INTO opendota_calls (at, calls)
@@ -311,6 +322,16 @@ export function reserveOpenDotaCalls(calls: number, now: Date, limits: CallLimit
               AND (SELECT COALESCE(SUM(calls), 0) FROM opendota_calls WHERE at > ?) + ? <= ?`,
       args: [at, calls, at - MINUTE_MS, calls, limits.perMinute, at - DAY_MS, calls, limits.perDay],
     })
-    return rowsAffected === 1
+    return rowsAffected === 1 ? 'granted' : 'busy'
+  })
+}
+
+export function pauseOpenDota(until: Date): Promise<void> {
+  return inWriteTransaction(async (tx) => {
+    await tx.execute({
+      sql: `INSERT INTO opendota_pause (id, until) VALUES (1, ?)
+            ON CONFLICT (id) DO UPDATE SET until = MAX(until, excluded.until)`,
+      args: [until.getTime()],
+    })
   })
 }

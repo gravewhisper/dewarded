@@ -11,10 +11,10 @@ const { claimAccount, linkAccount, refreshClaim } = await import('./link.ts')
 const MINUTE = 60 * 1000
 const HOUR = 60 * MINUTE
 
-type OpenDotaStub = { calls: string[]; rankTier: number; regionId: string }
+type OpenDotaStub = { calls: string[]; rankTier: number; regionId: string; playerStatus: number }
 
 function stubOpenDota(t: TestContext): OpenDotaStub {
-  const stub: OpenDotaStub = { calls: [], rankTier: 53, regionId: '3' }
+  const stub: OpenDotaStub = { calls: [], rankTier: 53, regionId: '3', playerStatus: 200 }
   t.mock.method(console, 'error', () => {})
   t.mock.method(globalThis, 'fetch', async (input: string | URL | Request) => {
     const url = String(input)
@@ -25,7 +25,7 @@ function stubOpenDota(t: TestContext): OpenDotaStub {
     }
     return new Response(
       JSON.stringify({ profile: { steamid: 'x' }, rank_tier: stub.rankTier, leaderboard_rank: null }),
-      { status: 200 },
+      { status: stub.playerStatus },
     )
   })
   return stub
@@ -149,4 +149,24 @@ test('a refresh a day after the last region lookup fetches the region again, eve
   assert.equal(opendota.calls.length, 3)
   assert.equal(countsCalls(opendota).length, 1)
   assert.equal((await db.getClaimBySteamId(steamId64))?.region?.name, 'US East')
+})
+
+test('after OpenDota answers 429, checks report rate_limited with no calls for a minute', async (t) => {
+  const opendota = stubOpenDota(t)
+  const start = day(20)
+  opendota.playerStatus = 429
+  assert.deepEqual(await claimAccount('76561198000000601', 'limited', { now: start }), {
+    ok: false,
+    error: 'rate_limited',
+  })
+
+  opendota.calls = []
+  opendota.playerStatus = 200
+  const paused = await claimAccount('76561198000000602', 'waiting', { now: later(start, 59 * 1000) })
+  assert.deepEqual(paused, { ok: false, error: 'rate_limited' })
+  assert.equal(opendota.calls.length, 0)
+
+  const resumed = await claimAccount('76561198000000602', 'waiting', { now: later(start, MINUTE) })
+  assert.equal(resumed.ok, true)
+  assert.equal(opendota.calls.length, 3)
 })

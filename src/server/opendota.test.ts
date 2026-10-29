@@ -37,3 +37,14 @@ test('a player lookup that never answers is cut off and reports upstream', async
   )
   assert.deepEqual(await fetchMedal(4294967270), { ok: false, error: 'upstream' })
 })
+
+test('a rate limited refresh request reports rate_limited without looking up the player', async (t) => {
+  t.mock.method(console, 'error', () => {})
+  const calls: string[] = []
+  t.mock.method(globalThis, 'fetch', async (input: string | URL | Request) => {
+    calls.push(String(input))
+    return new Response('{}', { status: 429 })
+  })
+  assert.deepEqual(await fetchMedal(4294967270), { ok: false, error: 'rate_limited' })
+  assert.equal(calls.length, 1)
+})
