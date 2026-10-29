@@ -15,7 +15,6 @@ function required(name: string, devDefault: () => string): string {
 export const config = {
   isProduction,
   publicUrl: required('PUBLIC_URL', () => 'http://localhost:3000').replace(/\/$/, ''),
-  // A per-process dev secret means sessions reset on restart, which is fine locally.
   sessionSecret: required('SESSION_SECRET', () => randomBytes(32).toString('hex')),
   databaseUrl: process.env.DATABASE_URL || 'file:./data/dewarded.db',
   databaseAuthToken: process.env.DATABASE_AUTH_TOKEN || undefined,
@@ -29,8 +28,6 @@ export const config = {
   userAgent: 'web:dewarded:0.1 (opt-in Dota 2 medal verification)',
 }
 
-// import.meta.env.DEV is a build-time constant, so a production build keeps the
-// fake login unreachable even if the host forgets to set NODE_ENV.
 export const devLoginEnabled =
   import.meta.env?.DEV === true &&
   !config.isProduction &&

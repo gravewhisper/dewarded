@@ -12,7 +12,6 @@ export const Route = createFileRoute('/auth/reddit/callback')({
         if (!config.reddit) return linkError('reddit_unconfigured')
         const params = new URL(request.url).searchParams
         const { redditState, ...session } = readSession()
-        // The state is single-use whatever the outcome.
         writeSession(session)
         if (!redditState || params.get('state') !== redditState) return linkError('reddit_state')
         const code = params.get('code')

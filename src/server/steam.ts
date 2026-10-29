@@ -21,8 +21,6 @@ export function steamLoginUrl(): string {
 
 export type SteamVerifyError = 'malformed' | 'rejected' | 'unreachable'
 
-// Every check before the round-trip is cheap rejection. Only Steam's
-// check_authentication answer proves the assertion was signed by Steam.
 export async function verifySteamCallback(
   query: URLSearchParams,
 ): Promise<{ ok: true; steamId64: string } | { ok: false; error: SteamVerifyError }> {

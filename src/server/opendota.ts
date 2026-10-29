@@ -45,7 +45,6 @@ export async function fetchMedal(accountId: number): Promise<OpenDotaResult> {
       getJson<PlayerResponse>(`/players/${accountId}`),
       getJson<CountsResponse>(`/players/${accountId}/counts?lobby_type=7`),
     ])
-    // OpenDota omits the profile for accounts it has never seen or that hide match data.
     if (!player.profile) return { ok: false, error: 'no_profile' }
     const medal = parseMedal(player.rank_tier, player.leaderboard_rank)
     if (!medal) {
