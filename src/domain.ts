@@ -19,8 +19,11 @@ export type SteamCheck = {
   accountId: number
   medal: Medal
   region: Region | null
+  regionCheckedAt: Date
   checkedAt: Date
 }
+
+export type KnownRegion = Pick<SteamCheck, 'region' | 'regionCheckedAt'>
 
 export type MedalCheck = SteamCheck & { redditUsername: string }
 

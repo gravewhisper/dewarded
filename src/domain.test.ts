@@ -143,6 +143,7 @@ test('public verification carries no Steam identifiers', () => {
     medal: { kind: 'immortal', leaderboardRank: 16 },
     region: { name: 'Europe', games: 1506, share: 1506 / 1559 },
     checkedAt: new Date(0),
+    regionCheckedAt: new Date(0),
     selfReportedMmr: 9000,
   })
   assert.deepEqual(Object.keys(shown).sort(), [
@@ -178,6 +179,7 @@ const immortalCheck: MedalCheck = {
   medal: { kind: 'immortal', leaderboardRank: 16 },
   region: null,
   checkedAt: new Date(0),
+  regionCheckedAt: new Date(0),
 }
 
 test('each star estimates MMR from its start to just before the next star', () => {
@@ -316,6 +318,7 @@ test('public claim carries no Steam identifiers', () => {
     medal: { kind: 'immortal', leaderboardRank: 4151 },
     region: { name: 'Europe', games: 1506, share: 1506 / 1559 },
     checkedAt: new Date(0),
+    regionCheckedAt: new Date(0),
     selfReportedMmr: 9000,
   })
   assert.deepEqual(Object.keys(shown).sort(), [

@@ -40,7 +40,8 @@ async function open(): Promise<Client> {
       medal TEXT NOT NULL,
       region TEXT,
       checked_at INTEGER NOT NULL,
-      self_reported_mmr INTEGER
+      self_reported_mmr INTEGER,
+      region_checked_at INTEGER
     )
   `)
   const { rows: columns } = await client.execute('PRAGMA table_info(verifications)')
@@ -56,9 +57,17 @@ async function open(): Promise<Client> {
       medal TEXT NOT NULL,
       region TEXT,
       checked_at INTEGER NOT NULL,
-      self_reported_mmr INTEGER
+      self_reported_mmr INTEGER,
+      region_checked_at INTEGER
     )
   `)
+  for (const table of ['verifications', 'claims']) {
+    const { rows } = await client.execute(`PRAGMA table_info(${table})`)
+    if (!rows.some((column) => column.name === 'region_checked_at')) {
+      await client.execute(`ALTER TABLE ${table} ADD COLUMN region_checked_at INTEGER`)
+    }
+    await client.execute(`UPDATE ${table} SET region_checked_at = checked_at WHERE region_checked_at IS NULL`)
+  }
   await client.execute(
     'CREATE TABLE IF NOT EXISTS opendota_calls (at INTEGER NOT NULL, calls INTEGER NOT NULL)',
   )
@@ -72,6 +81,7 @@ function toSteamCheck(row: Row): SteamCheck {
     accountId: Number(row.account_id),
     medal: JSON.parse(String(row.medal)) as Medal,
     region: row.region === null ? null : (JSON.parse(String(row.region)) as Region),
+    regionCheckedAt: new Date(Number(row.region_checked_at)),
     checkedAt: new Date(Number(row.checked_at)),
   }
 }
@@ -129,15 +139,16 @@ export function saveVerification(check: MedalCheck): Promise<void> {
   return inWriteTransaction(async (tx) => {
     const previous = await readVerification(tx, check.redditUsername)
     await tx.execute({
-      sql: `INSERT INTO verifications (reddit_username, steam_id64, account_id, medal, region, checked_at, self_reported_mmr)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+      sql: `INSERT INTO verifications (reddit_username, steam_id64, account_id, medal, region, checked_at, self_reported_mmr, region_checked_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (reddit_username) DO UPDATE SET
               steam_id64 = excluded.steam_id64,
               account_id = excluded.account_id,
               medal = excluded.medal,
               region = excluded.region,
               checked_at = excluded.checked_at,
-              self_reported_mmr = excluded.self_reported_mmr`,
+              self_reported_mmr = excluded.self_reported_mmr,
+              region_checked_at = excluded.region_checked_at`,
       args: [
         check.redditUsername,
         check.steamId64,
@@ -146,6 +157,7 @@ export function saveVerification(check: MedalCheck): Promise<void> {
         check.region === null ? null : JSON.stringify(check.region),
         check.checkedAt.getTime(),
         carriedMmr(previous, check),
+        check.regionCheckedAt.getTime(),
       ],
     })
   })
@@ -188,9 +200,9 @@ async function readClaim(db: Client | Transaction, steamId64: string): Promise<C
 
 export async function getLatestSteamCheck(steamId64: string): Promise<SteamCheck | null> {
   const { rows } = await (await getDb()).execute({
-    sql: `SELECT steam_id64, account_id, medal, region, checked_at FROM claims WHERE steam_id64 = ?
+    sql: `SELECT steam_id64, account_id, medal, region, region_checked_at, checked_at FROM claims WHERE steam_id64 = ?
           UNION ALL
-          SELECT steam_id64, account_id, medal, region, checked_at FROM verifications WHERE steam_id64 = ?
+          SELECT steam_id64, account_id, medal, region, region_checked_at, checked_at FROM verifications WHERE steam_id64 = ?
           ORDER BY checked_at DESC LIMIT 1`,
     args: [steamId64, steamId64],
   })
@@ -214,15 +226,16 @@ export function saveClaim(check: SteamCheck, claimedRedditUsername: string): Pro
     const previous = await readClaim(tx, check.steamId64)
     const id = previous?.id ?? claimIdFromBytes(randomBytes(CLAIM_ID_LENGTH))
     await tx.execute({
-      sql: `INSERT INTO claims (id, steam_id64, account_id, claimed_reddit_username, medal, region, checked_at, self_reported_mmr)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      sql: `INSERT INTO claims (id, steam_id64, account_id, claimed_reddit_username, medal, region, checked_at, self_reported_mmr, region_checked_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (steam_id64) DO UPDATE SET
               account_id = excluded.account_id,
               claimed_reddit_username = excluded.claimed_reddit_username,
               medal = excluded.medal,
               region = excluded.region,
               checked_at = excluded.checked_at,
-              self_reported_mmr = excluded.self_reported_mmr`,
+              self_reported_mmr = excluded.self_reported_mmr,
+              region_checked_at = excluded.region_checked_at`,
       args: [
         id,
         check.steamId64,
@@ -232,6 +245,7 @@ export function saveClaim(check: SteamCheck, claimedRedditUsername: string): Pro
         check.region === null ? null : JSON.stringify(check.region),
         check.checkedAt.getTime(),
         carriedMmr(previous, check),
+        check.regionCheckedAt.getTime(),
       ],
     })
     return id

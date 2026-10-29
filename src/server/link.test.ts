@@ -6,22 +6,22 @@ import { join } from 'node:path'
 
 process.env.DATABASE_URL = `file:${join(mkdtempSync(join(tmpdir(), 'dewarded-link-')), 'test.db')}`
 const db = await import('./db.ts')
-const { claimAccount, linkAccount } = await import('./link.ts')
+const { claimAccount, linkAccount, refreshClaim } = await import('./link.ts')
 
 const MINUTE = 60 * 1000
 const HOUR = 60 * MINUTE
 
-type OpenDotaStub = { calls: string[]; rankTier: number }
+type OpenDotaStub = { calls: string[]; rankTier: number; regionId: string }
 
 function stubOpenDota(t: TestContext): OpenDotaStub {
-  const stub: OpenDotaStub = { calls: [], rankTier: 53 }
+  const stub: OpenDotaStub = { calls: [], rankTier: 53, regionId: '3' }
   t.mock.method(console, 'error', () => {})
   t.mock.method(globalThis, 'fetch', async (input: string | URL | Request) => {
     const url = String(input)
     stub.calls.push(url)
     if (url.endsWith('/refresh')) return new Response('{}', { status: 200 })
     if (url.includes('/counts')) {
-      return new Response(JSON.stringify({ region: { '3': { games: 40 } } }), { status: 200 })
+      return new Response(JSON.stringify({ region: { [stub.regionId]: { games: 40 } } }), { status: 200 })
     }
     return new Response(
       JSON.stringify({ profile: { steamid: 'x' }, rank_tier: stub.rankTier, leaderboard_rank: null }),
@@ -118,4 +118,35 @@ test('thirty claims at once never make more OpenDota calls than the per-minute b
   assert.equal(granted, 3)
   assert.equal(busy, 27)
   assert.equal(opendota.calls.length, granted * 3)
+})
+
+const countsCalls = (opendota: OpenDotaStub) => opendota.calls.filter((url) => url.includes('/counts'))
+
+test('a refresh within a day of the last region lookup keeps the stored region and makes two calls', async (t) => {
+  const opendota = stubOpenDota(t)
+  const steamId64 = '76561198000000501'
+  const start = day(16)
+  await claimAccount(steamId64, 'region_keeper', { now: start })
+  assert.equal(countsCalls(opendota).length, 1)
+
+  opendota.calls = []
+  opendota.regionId = '2'
+  assert.equal((await refreshClaim(steamId64, { now: later(start, 2 * HOUR) })).ok, true)
+  assert.equal(opendota.calls.length, 2)
+  assert.equal(countsCalls(opendota).length, 0)
+  assert.equal((await db.getClaimBySteamId(steamId64))?.region?.name, 'Europe')
+})
+
+test('a refresh a day after the last region lookup fetches the region again, even after medal-only refreshes', async (t) => {
+  const opendota = stubOpenDota(t)
+  const steamId64 = '76561198000000502'
+  const start = day(18)
+  await claimAccount(steamId64, 'region_mover', { now: start })
+  await refreshClaim(steamId64, { now: later(start, 12 * HOUR) })
+  opendota.calls = []
+  opendota.regionId = '2'
+  assert.equal((await refreshClaim(steamId64, { now: later(start, 24 * HOUR) })).ok, true)
+  assert.equal(opendota.calls.length, 3)
+  assert.equal(countsCalls(opendota).length, 1)
+  assert.equal((await db.getClaimBySteamId(steamId64))?.region?.name, 'US East')
 })

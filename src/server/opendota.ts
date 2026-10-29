@@ -2,8 +2,8 @@ import {
   parseMedal,
   pickRegion,
   steamId64ToAccountId,
+  type KnownRegion,
   type Medal,
-  type Region,
   type RegionCounts,
   type SteamCheck,
 } from '#/domain'
@@ -15,12 +15,12 @@ const API = 'https://api.opendota.com/api'
 
 export const MEDAL_REUSE_MS = 60 * 60 * 1000
 
+export const REGION_REUSE_MS = 24 * 60 * 60 * 1000
+
 export const OPENDOTA_LIMITS: CallLimits = { perMinute: 50, perDay: 2800 }
 
-const CALLS_PER_CHECK = 3
-
 export type OpenDotaResult =
-  | { ok: true; medal: Medal; region: Region | null }
+  | ({ ok: true; medal: Medal } & KnownRegion)
   | { ok: false; error: 'rate_limited' | 'no_profile' | 'upstream' }
 
 type PlayerResponse = {
@@ -59,12 +59,21 @@ async function requestRefresh(accountId: number): Promise<void> {
   }
 }
 
-export async function fetchMedal(accountId: number): Promise<OpenDotaResult> {
+async function fetchRegion(accountId: number, now: Date): Promise<KnownRegion> {
+  const counts = await getJson<CountsResponse>(`/players/${accountId}/counts?lobby_type=7`)
+  return { region: pickRegion(counts.region ?? {}, regionNames), regionCheckedAt: now }
+}
+
+export async function fetchMedal(
+  accountId: number,
+  keptRegion: KnownRegion | null = null,
+  now = new Date(),
+): Promise<OpenDotaResult> {
   await requestRefresh(accountId)
   try {
-    const [player, counts] = await Promise.all([
+    const [player, known] = await Promise.all([
       getJson<PlayerResponse>(`/players/${accountId}`),
-      getJson<CountsResponse>(`/players/${accountId}/counts?lobby_type=7`),
+      keptRegion ?? fetchRegion(accountId, now),
     ])
     if (!player.profile) return { ok: false, error: 'no_profile' }
     const medal = parseMedal(player.rank_tier, player.leaderboard_rank)
@@ -72,7 +81,7 @@ export async function fetchMedal(accountId: number): Promise<OpenDotaResult> {
       console.error(`OpenDota returned unexpected rank_tier ${player.rank_tier}`)
       return { ok: false, error: 'upstream' }
     }
-    return { ok: true, medal, region: pickRegion(counts.region ?? {}, regionNames) }
+    return { ok: true, medal, ...known }
   } catch (err) {
     if (err instanceof RateLimited) return { ok: false, error: 'rate_limited' }
     if (err instanceof NotIndexed) return { ok: false, error: 'no_profile' }
@@ -87,13 +96,21 @@ export type CheckResult = { ok: true; check: SteamCheck } | { ok: false; error: 
 
 export type CheckOptions = { now?: Date; limits?: CallLimits }
 
-type Plan = { kind: 'reuse'; check: SteamCheck } | { kind: 'fetch' }
+type Plan =
+  | { kind: 'reuse'; check: SteamCheck }
+  | { kind: 'fetch'; calls: number; keptRegion: KnownRegion | null }
+
+const fresh = (at: Date, maxAgeMs: number, now: Date) => at.getTime() + maxAgeMs > now.getTime()
 
 function planCheck(previous: SteamCheck | null, now: Date): Plan {
-  if (previous && previous.checkedAt.getTime() + MEDAL_REUSE_MS > now.getTime()) {
+  if (previous && fresh(previous.checkedAt, MEDAL_REUSE_MS, now)) {
     return { kind: 'reuse', check: previous }
   }
-  return { kind: 'fetch' }
+  if (previous && fresh(previous.regionCheckedAt, REGION_REUSE_MS, now)) {
+    const { region, regionCheckedAt } = previous
+    return { kind: 'fetch', calls: 2, keptRegion: { region, regionCheckedAt } }
+  }
+  return { kind: 'fetch', calls: 3, keptRegion: null }
 }
 
 export async function checkSteamAccount(
@@ -102,12 +119,10 @@ export async function checkSteamAccount(
 ): Promise<CheckResult> {
   const plan = planCheck(await getLatestSteamCheck(steamId64), now)
   if (plan.kind === 'reuse') return { ok: true, check: plan.check }
-  if (!(await reserveOpenDotaCalls(CALLS_PER_CHECK, now, limits))) return { ok: false, error: 'busy' }
+  if (!(await reserveOpenDotaCalls(plan.calls, now, limits))) return { ok: false, error: 'busy' }
   const accountId = steamId64ToAccountId(steamId64)
-  const result = await fetchMedal(accountId)
+  const result = await fetchMedal(accountId, plan.keptRegion, now)
   if (!result.ok) return result
-  return {
-    ok: true,
-    check: { steamId64, accountId, medal: result.medal, region: result.region, checkedAt: now },
-  }
+  const { ok: _, ...found } = result
+  return { ok: true, check: { steamId64, accountId, ...found, checkedAt: now } }
 }

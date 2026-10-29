@@ -14,6 +14,7 @@ const check = (steamId64: string): SteamCheck => ({
   medal: { kind: 'ranked', tier: 3, stars: 2 },
   region: null,
   checkedAt: new Date(0),
+  regionCheckedAt: new Date(0),
 })
 
 const PERSON = '76561198000000001'
