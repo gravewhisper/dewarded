@@ -7,8 +7,9 @@ import { createClient, type Client } from '@libsql/client'
 import type { SteamId64 } from '#/domain'
 
 const dir = mkdtempSync(join(tmpdir(), 'dewarded-migration-'))
-process.env.DATABASE_URL = `file:${join(dir, 'unused.db')}`
-const { openDatabase } = await import('./db.ts')
+const SERVER_DB = join(dir, 'server.db')
+process.env.DATABASE_URL = `file:${SERVER_DB}`
+const { getDb, openDatabase } = await import('./db.ts')
 const { deriveSteamKey } = await import('./steamKey.ts')
 
 const STEAM_ID = '76561198065514372' as SteamId64
@@ -247,4 +248,20 @@ test('a database keyed before it remembered its pepper takes the pepper it next 
   const client = await openDatabase(`file:${path}`, undefined, PEPPER)
   assert.equal(await ownerClaimId(client), 'k3x7q2mwab')
   client.close()
+})
+
+test('a database that failed to open, changing nothing, opens on the next request once the cause is fixed', async () => {
+  await writeOldSchemaDb(SERVER_DB)
+  const repair = createClient({ url: `file:${SERVER_DB}` })
+  await repair.execute("UPDATE claims SET steam_id64 = '7656119800000000' WHERE id = 'aaaaaaaaaa'")
+  const broken = readFileSync(SERVER_DB)
+  await assert.rejects(getDb(), /steam_id64 is not a Steam ID/)
+  assert.deepEqual(readFileSync(SERVER_DB), broken)
+  await repair.execute({ sql: "UPDATE claims SET steam_id64 = ? WHERE id = 'aaaaaaaaaa'", args: [OTHER_STEAM_ID] })
+  repair.close()
+  const client = await getDb()
+  assert.deepEqual((await client.execute('SELECT id FROM claims ORDER BY id')).rows.map((row) => row.id), [
+    'aaaaaaaaaa',
+    'k3x7q2mwab',
+  ])
 })
