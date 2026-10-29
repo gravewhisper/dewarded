@@ -25,6 +25,10 @@ export async function deriveSteamKey(steamId64: SteamId64, pepper: string): Prom
   return (await hashOneAtATime(steamId64, pepper)) as SteamKey
 }
 
+export function derivePepperCheck(pepper: string): Promise<string> {
+  return hashOneAtATime('dewarded pepper check', pepper)
+}
+
 const recentKeys = new Map<SteamId64, Promise<SteamKey>>()
 
 function forget(steamId64: SteamId64, key: Promise<SteamKey>): void {

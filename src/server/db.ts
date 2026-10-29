@@ -18,7 +18,7 @@ import {
   type Verification,
 } from '#/domain'
 import { config } from './config'
-import { deriveSteamKey } from './steamKey'
+import { derivePepperCheck, deriveSteamKey } from './steamKey'
 
 type KeyedTable = { name: string; columns: string; ownColumns: string[] }
 
@@ -71,32 +71,52 @@ async function keyedRow(table: KeyedTable, row: Row, pepper: string): Promise<Re
   }
 }
 
-async function replaceSteamIdsWithKeys(client: Client, pepper: string): Promise<boolean> {
+const PEPPER_MISMATCH =
+  'STEAM_ID_PEPPER is not the pepper this database was keyed with, so no page would find its owner. Start with the original STEAM_ID_PEPPER.'
+
+async function rememberedPepperCheck(tx: Transaction): Promise<string | null> {
+  await tx.execute(
+    'CREATE TABLE IF NOT EXISTS pepper_check (id INTEGER PRIMARY KEY CHECK (id = 1), value TEXT NOT NULL)',
+  )
+  const { rows } = await tx.execute('SELECT value FROM pepper_check')
+  return rows[0] ? String(rows[0].value) : null
+}
+
+async function replaceSteamIdsWithKeys(tx: Transaction, tables: KeyedTable[], pepper: string): Promise<void> {
+  await tx.execute('PRAGMA secure_delete = ON')
+  for (const table of tables) {
+    const keyed = `${table.name}_keyed`
+    await tx.execute(`CREATE TABLE ${keyed} ${table.columns}`)
+    const { rows } = await tx.execute(`SELECT * FROM ${table.name}`)
+    for (const row of rows) {
+      const values = await keyedRow(table, row, pepper)
+      const columns = Object.keys(values)
+      await tx.execute({
+        sql: `INSERT INTO ${keyed} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
+        args: Object.values(values),
+      })
+    }
+    await tx.execute(`DROP TABLE ${table.name}`)
+    await tx.execute(`ALTER TABLE ${keyed} RENAME TO ${table.name}`)
+  }
+}
+
+async function keyWithPepper(client: Client, pepper: string): Promise<boolean> {
+  const check = await derivePepperCheck(pepper)
   const tx = await client.transaction('write')
   try {
-    const pending: KeyedTable[] = []
+    const remembered = await rememberedPepperCheck(tx)
+    if (remembered !== null && remembered !== check) throw new Error(PEPPER_MISMATCH)
+    if (remembered === null) {
+      await tx.execute({ sql: 'INSERT INTO pepper_check (id, value) VALUES (1, ?)', args: [check] })
+    }
+    const unkeyed: KeyedTable[] = []
     for (const table of KEYED_TABLES) {
-      if (await hasSteamIdColumn(tx, table.name)) pending.push(table)
+      if (await hasSteamIdColumn(tx, table.name)) unkeyed.push(table)
     }
-    if (pending.length === 0) return false
-    await tx.execute('PRAGMA secure_delete = ON')
-    for (const table of pending) {
-      const keyed = `${table.name}_keyed`
-      await tx.execute(`CREATE TABLE ${keyed} ${table.columns}`)
-      const { rows } = await tx.execute(`SELECT * FROM ${table.name}`)
-      for (const row of rows) {
-        const values = await keyedRow(table, row, pepper)
-        const columns = Object.keys(values)
-        await tx.execute({
-          sql: `INSERT INTO ${keyed} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
-          args: Object.values(values),
-        })
-      }
-      await tx.execute(`DROP TABLE ${table.name}`)
-      await tx.execute(`ALTER TABLE ${keyed} RENAME TO ${table.name}`)
-    }
+    if (unkeyed.length > 0) await replaceSteamIdsWithKeys(tx, unkeyed, pepper)
     await tx.commit()
-    return true
+    return unkeyed.length > 0
   } finally {
     tx.close()
   }
@@ -109,7 +129,7 @@ export async function openDatabase(url: string, authToken: string | undefined, p
   for (const table of KEYED_TABLES) {
     await client.execute(`CREATE TABLE IF NOT EXISTS ${table.name} ${table.columns}`)
   }
-  if ((await replaceSteamIdsWithKeys(client, pepper)) && localFile) await client.execute('VACUUM')
+  if ((await keyWithPepper(client, pepper)) && localFile) await client.execute('VACUUM')
   await client.execute(
     'CREATE TABLE IF NOT EXISTS opendota_calls (at INTEGER NOT NULL, calls INTEGER NOT NULL)',
   )
@@ -122,7 +142,7 @@ export async function openDatabase(url: string, authToken: string | undefined, p
 
 let clientPromise: Promise<Client> | null = null
 
-function getDb(): Promise<Client> {
+export function getDb(): Promise<Client> {
   clientPromise ??= openDatabase(config.databaseUrl, config.databaseAuthToken, config.steamIdPepper)
   return clientPromise
 }

@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { serve } from 'srvx'
 import { staticMiddleware } from 'srvx/static'
-import app, { applySecurityHeaders } from './dist/server/server.js'
+import app, { applySecurityHeaders, getDb } from './dist/server/server.js'
 
 const log = async (request, next) => {
   const start = performance.now()
@@ -16,6 +16,8 @@ const securityHeaders = async (_request, next) => {
   applySecurityHeaders(response.headers)
   return response
 }
+
+await getDb()
 
 serve({
   fetch: app.fetch,
