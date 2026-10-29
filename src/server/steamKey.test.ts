@@ -1,12 +1,47 @@
-import { test } from 'node:test'
+import { test, type TestContext } from 'node:test'
 import assert from 'node:assert/strict'
+import crypto, { type BinaryLike, type ScryptOptions } from 'node:crypto'
+import { syncBuiltinESMExports } from 'node:module'
 import type { SteamId64 } from '#/domain'
-import { DEV_STEAM_ID_PEPPER, parseSteamIdPepper } from './config.ts'
+import { DEV_STEAM_ID_PEPPER, config, parseSteamIdPepper } from './config.ts'
 import { deriveSteamKey, provenSteam, signedInSteam, steamIdentity } from './steamKey.ts'
 
 const STEAM_ID = '76561198065514372' as SteamId64
 const NEXT_STEAM_ID = '76561198065514373' as SteamId64
 const PEPPER = '0123456789abcdef'.repeat(4)
+
+type Hashes = { started: number; peakInFlight: number }
+
+function countHashes(t: TestContext): Hashes {
+  const scrypt = crypto.scrypt
+  const hashes = { started: 0, peakInFlight: 0 }
+  let inFlight = 0
+  const counted = t.mock.method(
+    crypto,
+    'scrypt',
+    (
+      password: BinaryLike,
+      salt: BinaryLike,
+      keylen: number,
+      options: ScryptOptions,
+      done: (err: Error | null, key: Buffer) => void,
+    ) => {
+      hashes.started++
+      inFlight++
+      hashes.peakInFlight = Math.max(hashes.peakInFlight, inFlight)
+      scrypt(password, salt, keylen, options, (err, key) => {
+        inFlight--
+        done(err, key)
+      })
+    },
+  )
+  syncBuiltinESMExports()
+  t.after(() => {
+    counted.mock.restore()
+    syncBuiltinESMExports()
+  })
+  return hashes
+}
 
 test('the same Steam ID and pepper always give the same key', async () => {
   assert.equal(await deriveSteamKey(STEAM_ID, PEPPER), await deriveSteamKey(STEAM_ID, PEPPER))
@@ -40,11 +75,30 @@ test('development without a pepper uses a fixed one, so dev pages keep their own
   assert.equal(parseSteamIdPepper(DEV_STEAM_ID_PEPPER, true), DEV_STEAM_ID_PEPPER)
 })
 
-test('a session signed in before keys were stored in it still resolves to its Steam key', async () => {
+test('a session signed in before keys were stored in it reads as signed out, and reading a session never hashes', async (t) => {
   const signedIn = await steamIdentity(STEAM_ID)
-  assert.deepEqual(await signedInSteam({ steamId64: STEAM_ID }), signedIn)
+  const hashes = countHashes(t)
+  assert.equal(await signedInSteam({ steamId64: STEAM_ID }), null)
   assert.deepEqual(await signedInSteam(signedIn), signedIn)
   assert.equal(await signedInSteam({}), null)
+  assert.equal(hashes.started, 0)
+})
+
+test('hashes run one at a time, however many ask at once', async (t) => {
+  const hashes = countHashes(t)
+  const steamIds = ['76561198000000901', '76561198000000902', '76561198000000903', '76561198000000904']
+  await Promise.all(steamIds.map((steamId64) => deriveSteamKey(steamId64 as SteamId64, PEPPER)))
+  assert.deepEqual(hashes, { started: 4, peakInFlight: 1 })
+})
+
+test('a Steam ID is hashed once, however many sign-ins and writes ask for its key', async (t) => {
+  const steamId64 = '76561198000000911' as SteamId64
+  const hashes = countHashes(t)
+  const signIns = await Promise.all(Array.from({ length: 20 }, () => steamIdentity(steamId64)))
+  const writes = await Promise.all(signIns.map((signedIn) => provenSteam(signedIn)))
+  assert.equal(hashes.started, 1)
+  const key = await deriveSteamKey(steamId64, config.steamIdPepper)
+  assert.deepEqual(new Set([...signIns, ...writes].map((steam) => steam?.steamKey)), new Set([key]))
 })
 
 test("a write keys on the session's Steam ID, so a key copied into the session can't act on another page", async () => {
