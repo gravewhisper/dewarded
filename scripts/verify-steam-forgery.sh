@@ -12,12 +12,22 @@ start_login() {
 base() {
   echo '{"openid.ns":"http://specs.openid.net/auth/2.0","openid.mode":"id_res","openid.op_endpoint":"https://steamcommunity.com/openid/login","openid.claimed_id":"https://steamcommunity.com/openid/id/76561198000000001","openid.identity":"https://steamcommunity.com/openid/id/76561198000000001","openid.return_to":"'"$1"'","openid.response_nonce":"2026-10-29T12:00:00Zabc","openid.assoc_handle":"1234567890","openid.signed":"signed,op_endpoint,claimed_id,identity,return_to,response_nonce,assoc_handle","openid.sig":"AAAAAAAAAAAAAAAAAAAAAAAAAAA="}'
 }
+jar_session() { awk '$6=="dewarded_session"{split($7,p,".");s=p[1]} END{print s}' "$1" 2>/dev/null; }
 send() {
   local name=$1 jar=$2 return_to=$3 patch=$4
   local q; q=$(enc "$(node -e 'console.log(JSON.stringify({...JSON.parse(process.argv[1]),...JSON.parse(process.argv[2])}))' "$(base "$return_to")" "$patch")")
+  local before; before=$(jar_session "$jar")
   printf '%-44s ' "$name"
   curl -s -o /dev/null -D - -b "$jar" "$BASE/auth/steam/callback?$q" | tr -d '\r' | awk '/^HTTP/{c=$2} tolower($1)=="location:"{l=$2} tolower($1)=="set-cookie:"{split($2,kv,"=");split(kv[2],p,".");s=p[1]} END{print c, l, s}' \
-    | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const[c,l,b]=s.trim().split(" ");const sess=b?JSON.parse(Buffer.from(b,"base64url")):{};console.log(c,l,sess.steamId64?"SIGNED-IN "+sess.steamId64:"")})'
+    | node -e '
+const steamId = (body) => (body ? JSON.parse(Buffer.from(body, "base64url")).steamId64 : undefined)
+const masked = (id) => "*".repeat(id.length - 4) + id.slice(-4)
+let s = ""
+process.stdin.on("data", (d) => (s += d)).on("end", () => {
+  const [c, l, b] = s.trim().split(" ")
+  const after = steamId(b)
+  console.log(c, l, after && after !== steamId(process.argv[1]) ? "SIGNED-IN " + masked(after) : "")
+})' "$before"
 }
 try() {
   local jar="$WORK/jar.$RANDOM"

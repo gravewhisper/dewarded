@@ -4,9 +4,11 @@ import { steamIdentity } from '#/server/steamKey'
 
 const base = (process.env.BASE ?? 'http://localhost:3000').replace(/\/$/, '')
 const secret = process.env.SESSION_SECRET
-const steamId64 = parseSteamId64(process.argv[2] ?? '')
+const steamId64 = parseSteamId64(process.env.STEAM_ID64 ?? '')
 if (!secret || !steamId64) {
-  console.error('usage: BASE=<origin> SESSION_SECRET=<secret> STEAM_ID_PEPPER=<pepper> pnpm verify-steam-id-hidden <steamId64>')
+  console.error(
+    'usage: BASE=<origin> SESSION_SECRET=<secret> STEAM_ID_PEPPER=<pepper> STEAM_ID64=<steamId64> pnpm verify-steam-id-hidden',
+  )
   process.exit(1)
 }
 
