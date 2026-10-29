@@ -62,24 +62,28 @@ async function open(): Promise<Client> {
   return client
 }
 
-function toSteamCheck(row: Row): SteamCheck & { selfReportedMmr: number | null } {
+function toSteamCheck(row: Row): SteamCheck {
   return {
     steamId64: String(row.steam_id64),
     accountId: Number(row.account_id),
     medal: JSON.parse(String(row.medal)) as Medal,
     region: row.region === null ? null : (JSON.parse(String(row.region)) as Region),
     checkedAt: new Date(Number(row.checked_at)),
-    selfReportedMmr: row.self_reported_mmr === null ? null : Number(row.self_reported_mmr),
   }
 }
 
+function selfReportedMmr(row: Row): number | null {
+  return row.self_reported_mmr === null ? null : Number(row.self_reported_mmr)
+}
+
 function toVerification(row: Row): Verification {
-  return { ...toSteamCheck(row), redditUsername: String(row.reddit_username) }
+  return { ...toSteamCheck(row), selfReportedMmr: selfReportedMmr(row), redditUsername: String(row.reddit_username) }
 }
 
 function toClaim(row: Row): Claim {
   return {
     ...toSteamCheck(row),
+    selfReportedMmr: selfReportedMmr(row),
     id: String(row.id) as ClaimId,
     claimedRedditUsername: String(row.claimed_reddit_username),
   }
@@ -168,6 +172,17 @@ async function readClaim(db: Client | Transaction, steamId64: string): Promise<C
     args: [steamId64],
   })
   return rows[0] ? toClaim(rows[0]) : null
+}
+
+export async function getLatestSteamCheck(steamId64: string): Promise<SteamCheck | null> {
+  const { rows } = await (await getDb()).execute({
+    sql: `SELECT steam_id64, account_id, medal, region, checked_at FROM claims WHERE steam_id64 = ?
+          UNION ALL
+          SELECT steam_id64, account_id, medal, region, checked_at FROM verifications WHERE steam_id64 = ?
+          ORDER BY checked_at DESC LIMIT 1`,
+    args: [steamId64, steamId64],
+  })
+  return rows[0] ? toSteamCheck(rows[0]) : null
 }
 
 export async function getClaimBySteamId(steamId64: string): Promise<Claim | null> {
