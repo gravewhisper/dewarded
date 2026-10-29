@@ -65,8 +65,8 @@ This list covers the main points. The site's `/privacy` page has the full list.
 
 - Dewarded stores nothing until you sign in through Steam and enter a Reddit username. In reddit mode, it stores nothing until you finish both the Reddit login and the Steam login.
 - The database never contains a Steam ID or a Dota account ID. Dewarded stores a one-way, keyed hash of the Steam ID instead, made with scrypt (N=2^15, r=8, p=1) and salted with `STEAM_ID_PEPPER`. The hash recognises a Steam account that signs in again.
-- The Steam ID stays in the signed login cookie while you are signed in. The server uses it only in memory, to work out the hash and to fetch the medal from OpenDota, so refreshing a medal needs a Steam sign-in.
-- Public pages never show the Steam account. A public page receives only the medal and leaderboard rank, the region, the check date, the Reddit name, and the optional self-reported MMR.
+- The Steam ID stays in the signed login cookie, in your own browser, while you are signed in. The server reads it from that cookie only in memory, to work out the hash and to fetch the medal from OpenDota, so refreshing a medal needs a Steam sign-in.
+- No page shows the Steam ID or the Dota account ID, not even `/me` to the signed-in owner. No server function or loader returns either one, or the hash, to the browser. `/me` shows only that you are signed in through Steam. A public page receives only the medal and leaderboard rank, the region, the check date, the Reddit name, and the optional self-reported MMR.
 - In backlink mode, Dewarded never connects to your Reddit account. In reddit mode, Dewarded uses the Reddit token once to read your username and does not keep the token.
 - One button deletes everything. **Delete all my data and log out** on `/me` removes your record and your public page, then logs you out.
 

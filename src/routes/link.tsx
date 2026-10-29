@@ -30,7 +30,7 @@ function LinkPage() {
   const account = Route.useLoaderData()
   const error = errorMessage(Route.useSearch().error)
   return account.mode === 'backlink' ? (
-    <BacklinkSteps signedIn={account.steamId64 !== null} claim={account.claim} error={error} />
+    <BacklinkSteps signedIn={account.steamSignedIn} claim={account.claim} error={error} />
   ) : (
     <RedditSteps
       redditUsername={account.redditUsername}

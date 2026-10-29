@@ -42,7 +42,7 @@ export const getAccount = createServerFn({ method: 'GET' }).handler(async () => 
     const claim = steam && (await getClaimBySteamKey(steam.steamKey))
     return {
       mode: 'backlink' as const,
-      steamId64: steam?.steamId64 ?? null,
+      steamSignedIn: steam !== null,
       claim: claim && ownView(claim),
       pageUrl: claim ? `${config.publicUrl}/p/${claim.id}` : null,
     }
@@ -53,7 +53,7 @@ export const getAccount = createServerFn({ method: 'GET' }).handler(async () => 
   return {
     mode: 'reddit' as const,
     redditUsername: redditUsername ?? null,
-    steamId64: steam && steam.steamKey === verification?.steamKey ? steam.steamId64 : null,
+    steamSignedIn: steam !== null && steam.steamKey === verification?.steamKey,
     verification: verification && ownView(verification),
     devLogin: devLoginEnabled,
   }

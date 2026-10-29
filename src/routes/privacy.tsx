@@ -31,10 +31,12 @@ const STEAM_KEY_STORED = (
 const STEAM_ID_NOT_STORED = (
   <li>
     Your Steam ID and Dota account ID. Steam sends your Steam ID to Dewarded when you sign in, and
-    your login cookie keeps it while you stay signed in. Dewarded uses it only in memory, to work
-    out the hash and to fetch your medal from OpenDota. Your Dota account ID is a shorter form of
-    your Steam ID that OpenDota uses. The database contains neither, which is why refreshing your
-    medal needs you signed in through Steam.
+    your signed login cookie keeps it in your own browser while you stay signed in. The server
+    reads it from that cookie only in memory, to work out the hash when you sign in or change your
+    page and to fetch your medal from OpenDota when you refresh it. Your Dota account ID is a
+    shorter form of your Steam ID that OpenDota uses. The database contains neither, which is why
+    refreshing your medal needs you signed in through Steam. No page on the site shows either of
+    them, not even to you.
   </li>
 )
 
@@ -122,8 +124,9 @@ function SharedSections({ copy }: { copy: ModeCopy }) {
       <ul>
         <li>
           See what is stored about you. Your public page shows your medal, region, check date,
-          Reddit name and MMR. While you're signed in through Steam, <Link to="/me">My link</Link>{' '}
-          also shows your Steam ID, read from your login cookie and not from the database.
+          Reddit name and MMR. Your Steam ID is not shown anywhere on the site, not even to you on{' '}
+          <Link to="/me">My link</Link>. It exists only in your signed login cookie, in your own
+          browser, and briefly in server memory when the server needs it.
         </li>
         {copy.corrections}
         <li>

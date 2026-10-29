@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
     "seed-claim": "tsx scripts/seed-claim.ts",
+    "verify-steam-id-hidden": "tsx scripts/verify-steam-id-hidden.ts",
     "start": "NODE_ENV=production node server.mjs"
   },
   "dependencies": {

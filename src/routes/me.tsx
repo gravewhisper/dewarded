@@ -11,7 +11,6 @@ import {
   mmrAllowed,
   type Claim,
   type OwnView,
-  type SteamId64,
   type Verification,
 } from '#/domain'
 import { errorSearch, formatDay } from '#/format'
@@ -28,12 +27,12 @@ function MePage() {
   const account = Route.useLoaderData()
   const error = errorMessage(Route.useSearch().error)
   return account.mode === 'backlink' ? (
-    <BacklinkAccount claim={account.claim} pageUrl={account.pageUrl} steamId64={account.steamId64} error={error} />
+    <BacklinkAccount claim={account.claim} pageUrl={account.pageUrl} steamSignedIn={account.steamSignedIn} error={error} />
   ) : (
     <RedditAccount
       redditUsername={account.redditUsername}
       verification={account.verification}
-      steamId64={account.steamId64}
+      steamSignedIn={account.steamSignedIn}
       error={error}
     />
   )
@@ -41,11 +40,11 @@ function MePage() {
 
 function AccountFacts({
   check,
-  steamId64,
+  steamSignedIn,
   extra,
 }: {
   check: OwnView<Verification> | OwnView<Claim>
-  steamId64: SteamId64 | null
+  steamSignedIn: boolean
   extra?: React.ReactNode
 }) {
   const estimate = estimatedMmrRange(check.medal)
@@ -67,11 +66,11 @@ function AccountFacts({
           </div>
         )}
         {extra}
-        {steamId64 && (
+        {steamSignedIn && (
           <div>
             <dt className="caps">Steam account</dt>
             <dd>
-              <code>{steamId64}</code> <span className="muted">(only you see this)</span>
+              <span aria-hidden="true">✓</span> Signed in through Steam
             </dd>
           </div>
         )}
@@ -111,15 +110,15 @@ function LogOut() {
 function BacklinkAccount({
   claim,
   pageUrl,
-  steamId64,
+  steamSignedIn,
   error,
 }: {
   claim: OwnView<Claim> | null
   pageUrl: string | null
-  steamId64: SteamId64 | null
+  steamSignedIn: boolean
   error: string | null
 }) {
-  if (!steamId64) {
+  if (!steamSignedIn) {
     return (
       <main className="page">
         <h1>Not signed in</h1>
@@ -184,7 +183,7 @@ function BacklinkAccount({
       </ol>
       <AccountFacts
         check={claim}
-        steamId64={steamId64}
+        steamSignedIn={steamSignedIn}
         extra={
           <div>
             <dt className="caps">Reddit name</dt>
@@ -214,12 +213,12 @@ function BacklinkAccount({
 function RedditAccount({
   redditUsername,
   verification,
-  steamId64,
+  steamSignedIn,
   error,
 }: {
   redditUsername: string | null
   verification: OwnView<Verification> | null
-  steamId64: SteamId64 | null
+  steamSignedIn: boolean
   error: string | null
 }) {
   if (!redditUsername) {
@@ -241,7 +240,7 @@ function RedditAccount({
       {error && <p className="error">{error}</p>}
       {verification ? (
         <>
-          <AccountFacts check={verification} steamId64={steamId64} />
+          <AccountFacts check={verification} steamSignedIn={steamSignedIn} />
           {mmrAllowed(verification.medal) ? (
             <MmrForm mmr={verification.selfReportedMmr} action="/api/mmr" />
           ) : (
