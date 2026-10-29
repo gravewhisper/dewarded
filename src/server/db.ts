@@ -156,8 +156,7 @@ export function setSelfReportedMmr(
 }
 
 export async function deleteVerification(redditUsername: string): Promise<void> {
-  const db = await getDb()
-  await db.execute({
+  await (await getDb()).execute({
     sql: 'DELETE FROM verifications WHERE reddit_username = ?',
     args: [redditUsername],
   })
