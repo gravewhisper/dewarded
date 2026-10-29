@@ -5,6 +5,12 @@ import {
   medalLabel,
   medalTint,
   carriedMmr,
+  claimIdFromBytes,
+  parseClaimId,
+  parseRedditUsername,
+  parseVerifyMode,
+  publicClaim,
+  type ClaimId,
   estimatedMmrRange,
   formatMmrRange,
   mmrAllowed,
@@ -248,4 +254,77 @@ test('star estimates tile from Herald 1 up to Immortal with no gaps or overlaps'
     }
   }
   assert.equal(estimatedMmrRange({ kind: 'immortal', leaderboardRank: null })!.from, next)
+})
+
+test('claim ids are 10 lowercase base32 characters', () => {
+  const id = claimIdFromBytes(crypto.getRandomValues(new Uint8Array(10)))
+  assert.match(id, /^[a-z2-7]{10}$/)
+  assert.equal(claimIdFromBytes(new Uint8Array(10)), 'aaaaaaaaaa')
+  assert.equal(claimIdFromBytes(Uint8Array.from([0, 1, 25, 26, 31, 32, 63, 255, 224, 7])), 'abz27a77ah')
+})
+
+test('claim ids from different random bytes differ', () => {
+  const ids = new Set(Array.from({ length: 1000 }, () => claimIdFromBytes(crypto.getRandomValues(new Uint8Array(10)))))
+  assert.equal(ids.size, 1000)
+})
+
+test('claim id parsing accepts only the slug format', () => {
+  assert.equal(parseClaimId('k3x7q2mwab'), 'k3x7q2mwab')
+  for (const bad of ['', 'k3x9q2mwa', 'k3x7q2mwabc', 'K3X9Q2MWAB', 'k3x9q2mw01', '../etc/pw', '76561198065514372']) {
+    assert.equal(parseClaimId(bad), null, bad)
+  }
+})
+
+test('claimed Reddit names are 3 to 20 letters, digits, underscores or hyphens', () => {
+  assert.equal(parseRedditUsername('Some_User-1'), 'some_user-1')
+  assert.equal(parseRedditUsername('  abc  '), 'abc')
+  assert.equal(parseRedditUsername('a'.repeat(20)), 'a'.repeat(20))
+  for (const bad of ['', 'ab', 'a'.repeat(21), 'has space', 'dot.name', 'emoji😀x', '<script>', 'name/x']) {
+    assert.equal(parseRedditUsername(bad), null, bad)
+  }
+})
+
+test('claimed Reddit names may be typed with a u/ prefix', () => {
+  assert.equal(parseRedditUsername('u/Gaben'), 'gaben')
+  assert.equal(parseRedditUsername('/u/Gaben'), 'gaben')
+  assert.equal(parseRedditUsername('u/'), null)
+})
+
+test('verify mode defaults to reddit only when Reddit credentials exist', () => {
+  assert.equal(parseVerifyMode(undefined, true), 'reddit')
+  assert.equal(parseVerifyMode(undefined, false), 'backlink')
+  assert.equal(parseVerifyMode('', true), 'reddit')
+  assert.equal(parseVerifyMode('', false), 'backlink')
+})
+
+test('an explicit verify mode wins over the default', () => {
+  assert.equal(parseVerifyMode('backlink', true), 'backlink')
+  assert.equal(parseVerifyMode('reddit', false), 'reddit')
+})
+
+test('an unknown verify mode is a startup error', () => {
+  assert.throws(() => parseVerifyMode('Backlink', false), /VERIFY_MODE/)
+  assert.throws(() => parseVerifyMode('both', true), /VERIFY_MODE/)
+})
+
+test('public claim carries no Steam identifiers', () => {
+  const shown = publicClaim({
+    id: 'k3x7q2mwab' as ClaimId,
+    claimedRedditUsername: 'someone',
+    steamId64: '76561198065514372',
+    accountId: 105248644,
+    medal: { kind: 'immortal', leaderboardRank: 4151 },
+    region: { name: 'Europe', games: 10, share: 1 },
+    checkedAt: new Date(0),
+    selfReportedMmr: 9000,
+  })
+  assert.deepEqual(Object.keys(shown).sort(), [
+    'checkedAt',
+    'claimedRedditUsername',
+    'id',
+    'medal',
+    'region',
+    'selfReportedMmr',
+  ])
+  assert.doesNotMatch(JSON.stringify(shown), /76561198065514372|105248644/)
 })

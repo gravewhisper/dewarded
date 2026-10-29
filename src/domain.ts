@@ -8,14 +8,15 @@ export type Medal =
 
 export type Region = { name: string; games: number; share: number }
 
-export type MedalCheck = {
-  redditUsername: string
+export type SteamCheck = {
   steamId64: string
   accountId: number
   medal: Medal
   region: Region | null
   checkedAt: Date
 }
+
+export type MedalCheck = SteamCheck & { redditUsername: string }
 
 export type Verification = MedalCheck & { selfReportedMmr: number | null }
 
@@ -34,6 +35,59 @@ export function publicVerification(v: Verification): PublicVerification {
   }
 }
 
+export type ClaimId = string & { readonly __brand: 'ClaimId' }
+
+export type Claim = SteamCheck & {
+  id: ClaimId
+  claimedRedditUsername: string
+  selfReportedMmr: number | null
+}
+
+export type PublicClaim = Pick<
+  Claim,
+  'id' | 'claimedRedditUsername' | 'medal' | 'region' | 'checkedAt' | 'selfReportedMmr'
+>
+
+export function publicClaim(c: Claim): PublicClaim {
+  return {
+    id: c.id,
+    claimedRedditUsername: c.claimedRedditUsername,
+    medal: c.medal,
+    region: c.region,
+    checkedAt: c.checkedAt,
+    selfReportedMmr: c.selfReportedMmr,
+  }
+}
+
+const CLAIM_ID_ALPHABET = 'abcdefghijklmnopqrstuvwxyz234567'
+export const CLAIM_ID_LENGTH = 10
+const CLAIM_ID = new RegExp(`^[${CLAIM_ID_ALPHABET}]{${CLAIM_ID_LENGTH}}$`)
+
+export function claimIdFromBytes(bytes: Uint8Array): ClaimId {
+  if (bytes.length !== CLAIM_ID_LENGTH) throw new Error(`claim id needs ${CLAIM_ID_LENGTH} bytes`)
+  return Array.from(bytes, (byte) => CLAIM_ID_ALPHABET[byte & 31]).join('') as ClaimId
+}
+
+export function parseClaimId(raw: string): ClaimId | null {
+  return CLAIM_ID.test(raw) ? (raw as ClaimId) : null
+}
+
+export const REDDIT_USERNAME_PATTERN = '[A-Za-z0-9_\\-]{3,20}'
+const REDDIT_USERNAME = new RegExp(`^${REDDIT_USERNAME_PATTERN}$`)
+
+export function parseRedditUsername(raw: string): string | null {
+  const name = raw.trim().replace(/^\/?u\//i, '')
+  return REDDIT_USERNAME.test(name) ? normalizeRedditUsername(name) : null
+}
+
+export type VerifyMode = 'reddit' | 'backlink'
+
+export function parseVerifyMode(raw: string | undefined, redditConfigured: boolean): VerifyMode {
+  if (raw === undefined || raw === '') return redditConfigured ? 'reddit' : 'backlink'
+  if (raw === 'reddit' || raw === 'backlink') return raw
+  throw new Error(`VERIFY_MODE must be "reddit" or "backlink", got "${raw}"`)
+}
+
 export const MAX_MMR = 20000
 
 export function parseMmrInput(raw: string): { ok: true; mmr: number | null } | { ok: false } {
@@ -50,7 +104,7 @@ export function mmrAllowed(medal: Medal): boolean {
 
 export function carriedMmr(
   previous: Pick<Verification, 'steamId64' | 'selfReportedMmr'> | null,
-  next: MedalCheck,
+  next: SteamCheck,
 ): number | null {
   if (!previous || previous.steamId64 !== next.steamId64 || !mmrAllowed(next.medal)) return null
   return previous.selfReportedMmr

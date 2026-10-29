@@ -1,13 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { normalizeRedditUsername } from '#/domain'
+import { REDDIT_USERNAME_PATTERN, parseRedditUsername } from '#/domain'
 import { devLoginEnabled } from '#/server/config'
 import { redirectTo } from '#/server/http'
 import { writeSession } from '#/server/session'
 
 const notFound = () => new Response('Not found', { status: 404 })
-
-const USERNAME_PATTERN = '[A-Za-z0-9_\\-]{3,20}'
-const USERNAME = new RegExp(`^${USERNAME_PATTERN}$`)
 
 const FORM = `<!doctype html>
 <meta charset="utf-8">
@@ -18,7 +15,7 @@ const FORM = `<!doctype html>
   <p>REDDIT_CLIENT_ID is unset, so this form stands in for Reddit OAuth.
   It is disabled in production builds and whenever Reddit credentials exist.</p>
   <form method="post">
-    <label>Reddit username <input name="username" required pattern="${USERNAME_PATTERN}"></label>
+    <label>Reddit username <input name="username" required pattern="${REDDIT_USERNAME_PATTERN}"></label>
     <button>Log in as this user</button>
   </form>
 </main>`
@@ -32,9 +29,9 @@ export const Route = createFileRoute('/auth/dev-login')({
       },
       POST: async ({ request }) => {
         if (!devLoginEnabled) return notFound()
-        const username = String((await request.formData()).get('username') ?? '')
-        if (!USERNAME.test(username)) return new Response('Bad username', { status: 400 })
-        writeSession({ redditUsername: normalizeRedditUsername(username) })
+        const username = parseRedditUsername(String((await request.formData()).get('username') ?? ''))
+        if (!username) return new Response('Bad username', { status: 400 })
+        writeSession({ redditUsername: username })
         return redirectTo('/link', 303)
       },
     },
