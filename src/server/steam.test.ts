@@ -33,6 +33,19 @@ test('a Steam login started in this browser signs in', async (t) => {
   assert.equal(fetch.mock.callCount(), 1)
 })
 
+test('a Steam login that Steam never answers is cut off and reports unreachable', async (t) => {
+  t.mock.method(AbortSignal, 'timeout', () =>
+    AbortSignal.abort(new DOMException('The operation timed out.', 'TimeoutError')),
+  )
+  t.mock.method(globalThis, 'fetch', (_input: string | URL | Request, init?: RequestInit) =>
+    init?.signal?.aborted ? Promise.reject(init.signal.reason) : new Promise<Response>(() => {}),
+  )
+  assert.deepEqual(await verifySteamCallback(assertionFromSteam('this-browser-nonce'), 'this-browser-nonce'), {
+    ok: false,
+    error: 'unreachable',
+  })
+})
+
 test('a Steam login started in another browser is rejected without asking Steam', async (t) => {
   const fetch = stubSteamVouches(t)
   assert.deepEqual(await verifySteamCallback(assertionFromSteam('attacker-nonce'), 'victim-nonce'), {
