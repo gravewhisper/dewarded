@@ -31,7 +31,7 @@ Dota subreddits are full of confident gameplay advice. Some of it comes from pla
 
 1. **Reddit login** proves which Reddit username you own. Medallion asks only for the `identity` scope and reads nothing else.
 2. **Steam login** proves which Steam account you own. You sign in on `steamcommunity.com`, and Medallion confirms the response with Steam's own server before trusting it.
-3. **OpenDota** supplies the medal, the Immortal leaderboard rank and the region you play in most.
+3. **OpenDota** supplies the medal, the Immortal leaderboard rank and the region you play in most. Medallion asks OpenDota to refresh the account from Valve first.
 4. **Your page** lives at `/u/<reddit-name>`, with a card colored by your medal tier and link previews that show the medal.
 
 ## What the card shows
@@ -102,7 +102,7 @@ Set the Reddit app's redirect URI to `<PUBLIC_URL>/auth/reddit/callback`.
 
 ## OpenDota limits
 
-The free tier allows 60 calls a minute and 3,000 a day per server IP. Each check costs two calls, so refresh is owner-only with a one-hour cooldown.
+The free tier allows 60 calls a minute and 3,000 a day per server IP. Each check costs three calls: a refresh request that asks OpenDota to fetch the medal from Valve again, then the player and the match counts. That is about 1,000 checks a day, so refresh is owner-only with a one-hour cooldown. OpenDota processes the refresh in the background, so a check can still show the previous medal, and the next refresh picks up the new one.
 
 ## License and credits
 

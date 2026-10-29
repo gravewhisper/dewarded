@@ -2,9 +2,6 @@ import { steamId64ToAccountId } from '#/domain'
 import { getVerification, saveVerification } from './db'
 import { fetchMedal } from './opendota'
 
-// OpenDota's free tier allows 60 calls/min and 3000/day per server IP, and each
-// check spends two calls, so a per-user cooldown keeps one person from draining
-// the shared daily budget.
 export const REFRESH_COOLDOWN_MS = 60 * 60 * 1000
 
 export type LinkError = 'rate_limited' | 'no_profile' | 'upstream' | 'cooldown' | 'not_linked'

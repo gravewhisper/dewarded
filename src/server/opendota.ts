@@ -25,7 +25,21 @@ async function getJson<T>(path: string): Promise<T> {
   return (await res.json()) as T
 }
 
+async function requestRefresh(accountId: number): Promise<void> {
+  try {
+    const res = await fetch(`${API}/players/${accountId}/refresh`, {
+      method: 'POST',
+      headers: { 'User-Agent': config.userAgent },
+      signal: AbortSignal.timeout(5000),
+    })
+    if (!res.ok) console.error(`OpenDota refresh for ${accountId} returned ${res.status}`)
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 export async function fetchMedal(accountId: number): Promise<OpenDotaResult> {
+  await requestRefresh(accountId)
   try {
     const [player, counts] = await Promise.all([
       getJson<PlayerResponse>(`/players/${accountId}`),
