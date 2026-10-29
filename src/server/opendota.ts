@@ -1,3 +1,4 @@
+import { setTimeout } from 'node:timers'
 import {
   parseMedal,
   pickRegion,
@@ -7,6 +8,7 @@ import {
   type RegionCounts,
   type SteamCheck,
   type SteamIdentity,
+  type SteamKey,
 } from '#/domain'
 import { config } from './config'
 import { getLatestSteamCheck, pauseOpenDota, reserveOpenDotaCalls, type CallLimits } from './db'
@@ -105,6 +107,32 @@ type Plan =
 
 const fresh = (at: Date, maxAgeMs: number, now: Date) => at.getTime() + maxAgeMs > now.getTime()
 
+const RECENT_CHECK_LIMIT = 5000
+
+const recentChecks = new Map<SteamKey, SteamCheck>()
+
+function forget(check: SteamCheck): void {
+  if (recentChecks.get(check.steamKey) === check) recentChecks.delete(check.steamKey)
+}
+
+function remember(check: SteamCheck): void {
+  recentChecks.delete(check.steamKey)
+  recentChecks.set(check.steamKey, check)
+  setTimeout(() => forget(check), MEDAL_REUSE_MS).unref()
+  const [oldest] = recentChecks.keys()
+  if (recentChecks.size > RECENT_CHECK_LIMIT) recentChecks.delete(oldest)
+}
+
+function recentCheck(steamKey: SteamKey, now: Date): SteamCheck | null {
+  const check = recentChecks.get(steamKey)
+  return check && fresh(check.checkedAt, MEDAL_REUSE_MS, now) ? check : null
+}
+
+function newer(a: SteamCheck | null, b: SteamCheck | null): SteamCheck | null {
+  if (!a || !b) return a ?? b
+  return a.checkedAt.getTime() >= b.checkedAt.getTime() ? a : b
+}
+
 function planCheck(previous: SteamCheck | null, now: Date): Plan {
   if (previous && fresh(previous.checkedAt, MEDAL_REUSE_MS, now)) {
     return { kind: 'reuse', check: previous }
@@ -120,7 +148,7 @@ export async function checkSteamAccount(
   { steamId64, steamKey }: SteamIdentity,
   { now = new Date(), limits = OPENDOTA_LIMITS }: CheckOptions = {},
 ): Promise<CheckResult> {
-  const plan = planCheck(await getLatestSteamCheck(steamKey), now)
+  const plan = planCheck(newer(await getLatestSteamCheck(steamKey), recentCheck(steamKey, now)), now)
   if (plan.kind === 'reuse') return { ok: true, check: plan.check }
   const reservation = await reserveOpenDotaCalls(plan.calls, now, limits)
   if (reservation === 'paused') return { ok: false, error: 'rate_limited' }
@@ -131,5 +159,7 @@ export async function checkSteamAccount(
   }
   if (!result.ok) return result
   const { ok: _, ...found } = result
-  return { ok: true, check: { steamKey, ...found, checkedAt: now } }
+  const check = { steamKey, ...found, checkedAt: now }
+  remember(check)
+  return { ok: true, check }
 }
