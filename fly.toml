@@ -1,11 +1,11 @@
 app = "dewarded"
-primary_region = "ams"
+primary_region = "sin"
 
 [build]
 
 [env]
   DATABASE_URL = "file:/data/dewarded.db"
-  PUBLIC_URL = "https://dewarded.fly.dev"
+  PUBLIC_URL = "https://dewarded.com"
 
 [[mounts]]
   source = "dewarded_data"
