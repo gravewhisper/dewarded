@@ -21,7 +21,10 @@ class RateLimited extends Error {}
 class NotIndexed extends Error {}
 
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${API}${path}`, { headers: { 'User-Agent': config.userAgent } })
+  const res = await fetch(`${API}${path}`, {
+    headers: { 'User-Agent': config.userAgent },
+    signal: AbortSignal.timeout(8000),
+  })
   if (res.status === 429) throw new RateLimited()
   if (res.status === 404) throw new NotIndexed()
   if (!res.ok) throw new Error(`OpenDota returned ${res.status}`)

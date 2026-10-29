@@ -26,3 +26,14 @@ test('a failing player lookup reports upstream', async (t) => {
   stubOpenDota(t, 500)
   assert.deepEqual(await fetchMedal(4294967270), { ok: false, error: 'upstream' })
 })
+
+test('a player lookup that never answers is cut off and reports upstream', async (t) => {
+  t.mock.method(console, 'error', () => {})
+  t.mock.method(AbortSignal, 'timeout', () =>
+    AbortSignal.abort(new DOMException('The operation timed out.', 'TimeoutError')),
+  )
+  t.mock.method(globalThis, 'fetch', (_input: string | URL | Request, init?: RequestInit) =>
+    init?.signal?.aborted ? Promise.reject(init.signal.reason) : new Promise<Response>(() => {}),
+  )
+  assert.deepEqual(await fetchMedal(4294967270), { ok: false, error: 'upstream' })
+})
