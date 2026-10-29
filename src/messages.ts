@@ -8,7 +8,7 @@ export const ERROR_MESSAGES: Record<string, string> = {
   rejected: 'Steam did not vouch for that login.',
   unreachable: 'Could not reach Steam to confirm your login. Try again.',
   no_profile:
-    'OpenDota has no data for that Steam account. Enable "Expose Public Match Data" in Dota 2 settings, play a match, then try again.',
+    "OpenDota hasn't seen this Steam account before. Dewarded asked it to look the account up. Try again in a minute.",
   rate_limited: 'OpenDota is rate limiting us. Try again in a few minutes.',
   upstream: 'OpenDota returned an error. Try again later.',
   cooldown: 'Checked recently. Try again later.',

@@ -18,9 +18,12 @@ type CountsResponse = { region?: RegionCounts }
 
 class RateLimited extends Error {}
 
+class NotIndexed extends Error {}
+
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API}${path}`, { headers: { 'User-Agent': config.userAgent } })
   if (res.status === 429) throw new RateLimited()
+  if (res.status === 404) throw new NotIndexed()
   if (!res.ok) throw new Error(`OpenDota ${path} returned ${res.status}`)
   return (await res.json()) as T
 }
@@ -54,6 +57,7 @@ export async function fetchMedal(accountId: number): Promise<OpenDotaResult> {
     return { ok: true, medal, region: pickRegion(counts.region ?? {}, regionNames) }
   } catch (err) {
     if (err instanceof RateLimited) return { ok: false, error: 'rate_limited' }
+    if (err instanceof NotIndexed) return { ok: false, error: 'no_profile' }
     console.error(err)
     return { ok: false, error: 'upstream' }
   }
