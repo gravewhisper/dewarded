@@ -9,9 +9,9 @@ import { signedInSteam } from '#/server/steamKey'
 export const getVerifyMode = createServerFn({ method: 'GET' }).handler(() => config.verifyMode)
 
 export const getProfile = createServerFn({ method: 'GET' })
-  .validator((name: string) => normalizeRedditUsername(name))
+  .validator((name: unknown) => (typeof name === 'string' ? normalizeRedditUsername(name) : null))
   .handler(async ({ data: redditUsername }) => {
-    const verification = await getVerification(redditUsername)
+    const verification = redditUsername && (await getVerification(redditUsername))
     if (!verification) return null
     return {
       verification: publicVerification(verification),
