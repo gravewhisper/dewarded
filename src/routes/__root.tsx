@@ -1,8 +1,11 @@
 import { HeadContent, Link, Scripts, createRootRoute } from '@tanstack/react-router'
 
+import { getViewer } from '#/serverFns'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
+  loader: () => getViewer(),
+  staleTime: Infinity,
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -19,6 +22,7 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { signedIn } = Route.useLoaderData()
   return (
     <html lang="en">
       <head>
@@ -29,15 +33,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <Link to="/" className="wordmark">
             DEWARDED
           </Link>
-          <Link to="/link" className="header-link">
-            Verify your own medal
-          </Link>
+          {signedIn ? (
+            <Link to="/me" className="header-link">
+              My link
+            </Link>
+          ) : (
+            <Link to="/link" className="header-link">
+              Verify your own medal
+            </Link>
+          )}
         </header>
         {children}
         <footer className="site-footer">
           <Link to="/privacy">Privacy</Link>
           <Link to="/faq">FAQ</Link>
-          <Link to="/me">My link</Link>
           <span>Not affiliated with Valve. Dota 2 is a trademark of Valve Corporation.</span>
           <span>
             Rank data from <a href="https://www.opendota.com">OpenDota</a>.

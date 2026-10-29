@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, useLoaderData } from '@tanstack/react-router'
 import { ProfileCard } from '#/components/ProfileCard'
 import type { PublicVerification, VerifyMode } from '#/domain'
 import { getVerifyMode } from '#/serverFns'
@@ -52,6 +52,7 @@ const INTRO: Record<VerifyMode, React.ReactNode> = {
 function Home() {
   const { deleted } = Route.useSearch()
   const mode = Route.useLoaderData()
+  const { pagePath } = useLoaderData({ from: '__root__' })
   return (
     <main className="page home">
       <section className="home-intro">
@@ -59,8 +60,8 @@ function Home() {
         <h1>Prove your Dota 2 medal on Reddit</h1>
         {INTRO[mode]}
         <div className="actions">
-          <a className="button primary" href="/link">
-            Verify my medal
+          <a className="button primary" href={pagePath ?? '/link'}>
+            {pagePath ? 'Go to my page' : 'Verify my medal'}
           </a>
         </div>
         <p>

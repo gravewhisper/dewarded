@@ -54,3 +54,17 @@ export const getAccount = createServerFn({ method: 'GET' }).handler(async () => 
     devLogin: devLoginEnabled,
   }
 })
+
+export type Viewer = { signedIn: boolean; pagePath: string | null }
+
+export const getViewer = createServerFn({ method: 'GET' }).handler(async (): Promise<Viewer> => {
+  const session = readSession()
+  if (config.verifyMode === 'backlink') {
+    if (!session.steamId64) return { signedIn: false, pagePath: null }
+    const claim = await getClaimBySteamId(session.steamId64)
+    return { signedIn: true, pagePath: claim && `/p/${claim.id}` }
+  }
+  if (!session.redditUsername) return { signedIn: false, pagePath: null }
+  const verification = await getVerification(session.redditUsername)
+  return { signedIn: true, pagePath: verification && `/u/${verification.redditUsername}` }
+})
