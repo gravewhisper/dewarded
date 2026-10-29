@@ -60,12 +60,16 @@ function AccountFacts({ check, extra }: { check: Verification | Claim; extra?: R
   )
 }
 
-function DangerZone({ action }: { action: '/api/delete' | '/api/claim-delete' }) {
+function DangerZone({ action, consequence }: { action: '/api/delete' | '/api/claim-delete'; consequence: string }) {
   return (
     <section className="danger-zone">
       <h2>Delete my data</h2>
       <p className="muted">Removes your record and your public page immediately, then logs you out.</p>
       <form method="post" action={action}>
+        <label className="confirm-tick">
+          <input type="checkbox" name="confirm" value="yes" required />
+          <span>{consequence}</span>
+        </label>
         <button className="button danger">Delete all my data and log out</button>
       </form>
     </section>
@@ -174,7 +178,10 @@ function BacklinkAccount({
       <div className="actions">
         <LogOut />
       </div>
-      <DangerZone action="/api/claim-delete" />
+      <DangerZone
+        action="/api/claim-delete"
+        consequence="I understand my page link will stop working, and signing up again gives me a new link."
+      />
     </main>
   )
 }
@@ -237,7 +244,10 @@ function RedditAccount({
           </div>
         </>
       )}
-      <DangerZone action="/api/delete" />
+      <DangerZone
+        action="/api/delete"
+        consequence={`I understand my public page at /u/${redditUsername} will stop existing.`}
+      />
     </main>
   )
 }

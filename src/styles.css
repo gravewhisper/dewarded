@@ -756,6 +756,23 @@ form {
   margin-top: 0;
 }
 
+.confirm-tick {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.confirm-tick input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--danger);
+  cursor: pointer;
+}
+
 .prose h2 {
   font-size: 1.25rem;
 }
