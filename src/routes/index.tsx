@@ -1,6 +1,6 @@
 import { Link, createFileRoute, useLoaderData } from '@tanstack/react-router'
-import { ProfileCard } from '#/components/ProfileCard'
-import type { PublicVerification, VerifyMode } from '#/domain'
+import { ExampleCards } from '#/components/ExampleCards'
+import type { VerifyMode } from '#/domain'
 import { getVerifyMode } from '#/serverFns'
 
 export const Route = createFileRoute('/')({
@@ -9,13 +9,6 @@ export const Route = createFileRoute('/')({
   loader: () => getVerifyMode(),
   component: Home,
 })
-
-const EXAMPLE: Omit<PublicVerification, 'redditUsername'> = {
-  medal: { kind: 'ranked', tier: 6, stars: 4 },
-  region: { name: 'Europe', percent: 91 },
-  checkedAt: new Date('2026-10-29T12:00:00Z'),
-  selfReportedMmr: null,
-}
 
 const INTRO: Record<VerifyMode, React.ReactNode> = {
   reddit: (
@@ -68,13 +61,11 @@ function Home() {
           Questions? <Link to="/faq">Read the FAQ</Link>.
         </p>
       </section>
-      <ProfileCard
+      <ExampleCards
         identity={{
           kind: mode === 'reddit' ? 'reddit-verified' : 'reddit-claimed',
           username: 'your-name',
         }}
-        {...EXAMPLE}
-        example
       />
     </main>
   )

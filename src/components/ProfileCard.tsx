@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { MedalBadge } from '#/components/MedalBadge'
 import { EstimatedMmrAbout, InfoPopover } from '#/components/InfoPopover'
 import {
@@ -35,6 +36,7 @@ export function ProfileCard({
   example = false,
 }: Props) {
   const MedalName = example ? 'p' : 'h1'
+  const popoverId = useId()
   const estimate = estimatedMmrRange(medal)
   const reportedMmr = mmrAllowed(medal) ? selfReportedMmr : null
   return (
@@ -72,10 +74,14 @@ export function ProfileCard({
           <div className="mmr-line">
             <span className="mmr-label">Est. MMR</span>
             <span className="mmr-value">{formatMmrRange(estimate)}</span>
-            <EstimatedMmrAbout id="mmr-estimate-about" />
+            <EstimatedMmrAbout id={`${popoverId}-estimate`} />
           </div>
           {reportedMmr !== null && (
-            <SelfReportedMmr mmr={reportedMmr} identity={identity} />
+            <SelfReportedMmr
+              id={`${popoverId}-self`}
+              mmr={reportedMmr}
+              identity={identity}
+            />
           )}
         </div>
       )}
@@ -84,13 +90,21 @@ export function ProfileCard({
   )
 }
 
-function SelfReportedMmr({ mmr, identity }: { mmr: number; identity: CardIdentity }) {
+function SelfReportedMmr({
+  id,
+  mmr,
+  identity,
+}: {
+  id: string
+  mmr: number
+  identity: CardIdentity
+}) {
   return (
     <div className="mmr-line">
       <span className="mmr-label">MMR</span>
       <span className="mmr-value">{formatMmr(mmr)}</span>
       <span className="mmr-tag">self-reported</span>
-      <InfoPopover id="mmr-self-about" label="About self-reported MMR">
+      <InfoPopover id={id} label="About self-reported MMR">
         Valve doesn't share MMR numbers outside the game, so Dewarded can't check this.{' '}
         {identity.kind === 'reddit-verified'
           ? `u/${identity.username} typed it in.`

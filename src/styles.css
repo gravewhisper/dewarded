@@ -886,3 +886,76 @@ form {
 .name-form .name-form-row input {
   max-width: 16rem;
 }
+
+.examples {
+  width: 440px;
+  max-width: 100%;
+}
+
+.examples-deck {
+  display: grid;
+}
+
+.examples-slide {
+  grid-area: 1 / 1;
+  display: flex;
+  transition: opacity 400ms ease;
+}
+
+.examples-slide .profile-card {
+  width: 100%;
+}
+
+.examples-slide .card-medal {
+  flex: 1;
+  justify-content: center;
+}
+
+.examples-slide[inert] {
+  opacity: 0;
+}
+
+.examples-dots {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.examples-dot {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.examples-dot:hover::before {
+  border-color: var(--text);
+}
+
+.examples-dot::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--muted);
+  border-radius: 50%;
+}
+
+.examples-dot[aria-pressed='true']::before {
+  border-color: var(--text);
+  background: var(--text);
+}
+
+.examples-dot:focus-visible {
+  outline-offset: -6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .examples-slide {
+    transition: none;
+  }
+}
