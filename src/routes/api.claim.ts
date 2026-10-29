@@ -3,7 +3,7 @@ import { parseRedditUsername } from '#/domain'
 import { redirectTo } from '#/server/http'
 import { claimAccount } from '#/server/link'
 import { readSession } from '#/server/session'
-import { provenSteam } from '#/server/steamKey'
+import { provenSteam, signedInSteam } from '#/server/steamKey'
 
 const RETURN_PAGES = new Set(['/link', '/me'])
 
@@ -11,7 +11,8 @@ export const Route = createFileRoute('/api/claim')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const steam = await provenSteam(readSession())
+        const signedIn = signedInSteam(readSession())
+        const steam = signedIn && (await provenSteam(signedIn))
         if (!steam) return redirectTo('/link?error=steam_first', 303)
         const form = await request.formData()
         const back = String(form.get('back') ?? '')

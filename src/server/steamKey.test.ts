@@ -78,9 +78,9 @@ test('development without a pepper uses a fixed one, so dev pages keep their own
 test('a session signed in before keys were stored in it reads as signed out, and reading a session never hashes', async (t) => {
   const signedIn = await steamIdentity(STEAM_ID)
   const hashes = countHashes(t)
-  assert.equal(await signedInSteam({ steamId64: STEAM_ID }), null)
-  assert.deepEqual(await signedInSteam(signedIn), signedIn)
-  assert.equal(await signedInSteam({}), null)
+  assert.equal(signedInSteam({ steamId64: STEAM_ID }), null)
+  assert.deepEqual(signedInSteam(signedIn), signedIn)
+  assert.equal(signedInSteam({}), null)
   assert.equal(hashes.started, 0)
 })
 
@@ -98,7 +98,20 @@ test('a Steam ID is hashed once, however many sign-ins and writes ask for its ke
   const writes = await Promise.all(signIns.map((signedIn) => provenSteam(signedIn)))
   assert.equal(hashes.started, 1)
   const key = await deriveSteamKey(steamId64, config.steamIdPepper)
-  assert.deepEqual(new Set([...signIns, ...writes].map((steam) => steam?.steamKey)), new Set([key]))
+  assert.deepEqual(new Set([...signIns, ...writes].map((steam) => steam.steamKey)), new Set([key]))
+})
+
+test('a Steam ID is hashed again once ten minutes have passed since its last hash', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const steamId64 = '76561198000000921' as SteamId64
+  const hashes = countHashes(t)
+  await steamIdentity(steamId64)
+  t.mock.timers.tick(10 * 60 * 1000 - 1)
+  await steamIdentity(steamId64)
+  assert.equal(hashes.started, 1)
+  t.mock.timers.tick(1)
+  await steamIdentity(steamId64)
+  assert.equal(hashes.started, 2)
 })
 
 test("a write keys on the session's Steam ID, so a key copied into the session can't act on another page", async () => {
@@ -107,5 +120,4 @@ test("a write keys on the session's Steam ID, so a key copied into the session c
     await provenSteam({ steamId64: STEAM_ID, steamKey: victim.steamKey }),
     await steamIdentity(STEAM_ID),
   )
-  assert.equal(await provenSteam({}), null)
 })

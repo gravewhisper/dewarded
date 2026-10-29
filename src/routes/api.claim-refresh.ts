@@ -3,13 +3,14 @@ import { getClaimBySteamKey } from '#/server/db'
 import { redirectTo } from '#/server/http'
 import { refreshClaim } from '#/server/link'
 import { readSession } from '#/server/session'
-import { provenSteam } from '#/server/steamKey'
+import { provenSteam, signedInSteam } from '#/server/steamKey'
 
 export const Route = createFileRoute('/api/claim-refresh')({
   server: {
     handlers: {
       POST: async () => {
-        const steam = await provenSteam(readSession())
+        const signedIn = signedInSteam(readSession())
+        const steam = signedIn && (await provenSteam(signedIn))
         if (!steam) return redirectTo('/link?error=steam_first', 303)
         const result = await refreshClaim(steam)
         if (result.ok) return redirectTo(`/p/${result.id}`, 303)
