@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { deleteClaim } from '#/server/db'
+import { deletePersonData } from '#/server/db'
 import { redirectTo } from '#/server/http'
 import { clearSession, readSession } from '#/server/session'
 
@@ -8,7 +8,7 @@ export const Route = createFileRoute('/api/claim-delete')({
     handlers: {
       POST: async () => {
         const { steamId64 } = readSession()
-        if (steamId64) await deleteClaim(steamId64)
+        if (steamId64) await deletePersonData({ steamId64 })
         clearSession()
         return redirectTo('/?deleted=1', 303)
       },

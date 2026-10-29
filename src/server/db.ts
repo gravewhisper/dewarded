@@ -232,9 +232,22 @@ export function setClaimMmr(steamId64: string, mmr: number | null): Promise<MmrS
   })
 }
 
-export async function deleteClaim(steamId64: string): Promise<void> {
-  await (await getDb()).execute({
-    sql: 'DELETE FROM claims WHERE steam_id64 = ?',
-    args: [steamId64],
+export type Person = { steamId64: string } | { redditUsername: string }
+
+export function deletePersonData(person: Person): Promise<void> {
+  return inWriteTransaction(async (tx) => {
+    const steamId64 =
+      'steamId64' in person
+        ? person.steamId64
+        : (await readVerification(tx, person.redditUsername))?.steamId64
+    if ('redditUsername' in person) {
+      await tx.execute({
+        sql: 'DELETE FROM verifications WHERE reddit_username = ?',
+        args: [person.redditUsername],
+      })
+    }
+    if (steamId64 === undefined) return
+    await tx.execute({ sql: 'DELETE FROM verifications WHERE steam_id64 = ?', args: [steamId64] })
+    await tx.execute({ sql: 'DELETE FROM claims WHERE steam_id64 = ?', args: [steamId64] })
   })
 }
