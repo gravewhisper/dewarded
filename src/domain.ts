@@ -8,6 +8,12 @@ export type Medal =
 
 export type Region = { name: string; games: number; share: number }
 
+export type PublicRegion = { name: string; percent: number }
+
+export function publicRegion(region: Region): PublicRegion {
+  return { name: region.name, percent: Math.round(region.share * 100) }
+}
+
 export type SteamCheck = {
   steamId64: string
   accountId: number
@@ -22,14 +28,14 @@ export type Verification = MedalCheck & { selfReportedMmr: number | null }
 
 export type PublicVerification = Pick<
   Verification,
-  'redditUsername' | 'medal' | 'region' | 'checkedAt' | 'selfReportedMmr'
->
+  'redditUsername' | 'medal' | 'checkedAt' | 'selfReportedMmr'
+> & { region: PublicRegion | null }
 
 export function publicVerification(v: Verification): PublicVerification {
   return {
     redditUsername: v.redditUsername,
     medal: v.medal,
-    region: v.region,
+    region: v.region && publicRegion(v.region),
     checkedAt: v.checkedAt,
     selfReportedMmr: v.selfReportedMmr,
   }
@@ -45,15 +51,15 @@ export type Claim = SteamCheck & {
 
 export type PublicClaim = Pick<
   Claim,
-  'id' | 'claimedRedditUsername' | 'medal' | 'region' | 'checkedAt' | 'selfReportedMmr'
->
+  'id' | 'claimedRedditUsername' | 'medal' | 'checkedAt' | 'selfReportedMmr'
+> & { region: PublicRegion | null }
 
 export function publicClaim(c: Claim): PublicClaim {
   return {
     id: c.id,
     claimedRedditUsername: c.claimedRedditUsername,
     medal: c.medal,
-    region: c.region,
+    region: c.region && publicRegion(c.region),
     checkedAt: c.checkedAt,
     selfReportedMmr: c.selfReportedMmr,
   }
@@ -267,11 +273,11 @@ export function medalArt(medal: Medal): MedalArt {
   }
 }
 
-export function regionShare(region: Region): string {
-  return `${region.name}, ${Math.round(region.share * 100)}%`
+export function regionShare(region: PublicRegion): string {
+  return `${region.name}, ${region.percent}%`
 }
 
-export function regionLabel(region: Region): string {
+export function regionLabel(region: PublicRegion): string {
   return `most ranked games in ${regionShare(region)}`
 }
 

@@ -19,6 +19,7 @@ import {
   parseMedal,
   pickRegion,
   publicVerification,
+  publicRegion,
   regionLabel,
   regionShare,
   steamId64ToAccountId,
@@ -71,7 +72,7 @@ test('region is the one with the most ranked games', () => {
   assert.equal(region?.name, 'Europe')
   assert.equal(region?.games, 1506)
   assert.equal(region?.share, 1506 / 1559)
-  assert.equal(regionLabel(region!), 'most ranked games in Europe, 97%')
+  assert.equal(regionLabel(publicRegion(region!)), 'most ranked games in Europe, 97%')
 })
 
 test('Perfect World servers count together as China', () => {
@@ -84,7 +85,7 @@ test('Perfect World servers count together as China', () => {
   const region = pickRegion(counts, REGION_NAMES)
   assert.equal(region?.name, 'China')
   assert.equal(region?.games, 110)
-  assert.equal(regionLabel(region!), 'most ranked games in China, 52%')
+  assert.equal(regionLabel(publicRegion(region!)), 'most ranked games in China, 52%')
 })
 
 test('no ranked games means no region', () => {
@@ -140,7 +141,7 @@ test('public verification carries no Steam identifiers', () => {
     steamId64: '76561198065514372',
     accountId: 105248644,
     medal: { kind: 'immortal', leaderboardRank: 16 },
-    region: null,
+    region: { name: 'Europe', games: 1506, share: 1506 / 1559 },
     checkedAt: new Date(0),
     selfReportedMmr: 9000,
   })
@@ -152,6 +153,7 @@ test('public verification carries no Steam identifiers', () => {
     'selfReportedMmr',
   ])
   assert.doesNotMatch(JSON.stringify(shown), /76561198065514372|105248644/)
+  assert.deepEqual(shown.region, { name: 'Europe', percent: 97 })
 })
 
 test('each medal tier has its own card tint', () => {
@@ -166,7 +168,7 @@ test('each medal tier has its own card tint', () => {
 })
 
 test('short region shows the name and share', () => {
-  assert.equal(regionShare({ name: 'Europe', games: 91, share: 0.914 }), 'Europe, 91%')
+  assert.equal(regionShare({ name: 'Europe', percent: 91 }), 'Europe, 91%')
 })
 
 const immortalCheck: MedalCheck = {
@@ -312,7 +314,7 @@ test('public claim carries no Steam identifiers', () => {
     steamId64: '76561198065514372',
     accountId: 105248644,
     medal: { kind: 'immortal', leaderboardRank: 4151 },
-    region: { name: 'Europe', games: 10, share: 1 },
+    region: { name: 'Europe', games: 1506, share: 1506 / 1559 },
     checkedAt: new Date(0),
     selfReportedMmr: 9000,
   })
@@ -325,4 +327,5 @@ test('public claim carries no Steam identifiers', () => {
     'selfReportedMmr',
   ])
   assert.doesNotMatch(JSON.stringify(shown), /76561198065514372|105248644/)
+  assert.deepEqual(shown.region, { name: 'Europe', percent: 97 })
 })
