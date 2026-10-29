@@ -125,12 +125,11 @@ const QUESTIONS: Question[] = [
       <>
         <p>
           Dewarded stores a one-way, keyed hash of your Steam ID, not the ID itself, and uses it to
-          recognise your Steam account when you sign in again. The live database does not contain
-          your Steam ID, and no page on the site shows it, not even to you. Backups taken before
-          Dewarded switched to the hash may contain it, and they are deleted after the switch. It
-          stays in your signed login cookie, in your own browser. The server reads it from that
-          cookie only in memory, to work out the hash and to fetch your medal, and forgets it
-          within ten minutes. That is why refreshing your medal needs you signed in through Steam.
+          recognise your Steam account when you sign in again. The database does not contain your
+          Steam ID, and no page on the site shows it, not even to you. It stays in your signed
+          login cookie, in your own browser. The server reads it from that cookie only in memory,
+          to work out the hash and to fetch your medal, and forgets it within ten minutes. That is
+          why refreshing your medal needs you signed in through Steam.
         </p>
         <p>
           Dewarded also stores the Reddit username you typed, your medal, your region, the date it
