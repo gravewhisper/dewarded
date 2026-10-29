@@ -10,12 +10,13 @@ const csrf = createCsrfMiddleware({
     origin === process.env.PUBLIC_URL?.replace(/\/$/, ''),
 })
 
-const securityHeaders = createMiddleware().server(async ({ next }) => {
+const responseHeaders = createMiddleware().server(async ({ next }) => {
   const result = await next()
   applySecurityHeaders(result.response.headers)
+  result.response.headers.set('Cache-Control', 'no-store')
   return result
 })
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [securityHeaders, csrf],
+  requestMiddleware: [responseHeaders, csrf],
 }))
