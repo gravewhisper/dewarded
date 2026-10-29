@@ -141,11 +141,18 @@ fly deploy
 
 To deploy in reddit mode, also set `VERIFY_MODE=reddit`, `REDDIT_CLIENT_ID`, and `REDDIT_CLIENT_SECRET`. Set the Reddit app's redirect URI to `<PUBLIC_URL>/auth/reddit/callback`.
 
-## Why refresh is owner-only with a one-hour cooldown
+## How Dewarded stays inside OpenDota's free tier
 
-OpenDota's free tier allows 60 calls a minute and 3,000 calls a day per server IP. Each medal check costs three calls. The first is a refresh request that asks OpenDota to fetch the medal from Valve again. Dewarded then fetches the player record and the ranked match counts in parallel.
+OpenDota's free tier allows 60 calls a minute and 3,000 calls a day per server IP. A full medal check costs three calls. The first is a refresh request that asks OpenDota to fetch the medal from Valve again. Dewarded then fetches the player record and the ranked match counts in parallel.
 
-At three calls a check, the daily quota covers about 1,000 checks for the whole site. That budget is why only the page owner can refresh, and at most once an hour.
+A burst of sign-ups could spend the daily quota in an hour, so `src/server/opendota.ts` decides, in one place, whether a check may call OpenDota and how many calls it makes.
+
+- **A recent check is reused.** If any page checked the same Steam account in the last hour (`MEDAL_REUSE_MS`), a new link or claim copies that medal, region, and check time and makes no calls. Deleting your data deletes those rows too, so a deleted and remade page is checked again.
+- **The region is fetched at most once a day.** The match counts behind the region change slowly, so Dewarded keeps the stored region for 24 hours (`REGION_REUSE_MS`). Most refreshes cost two calls.
+- **The whole site shares one call budget.** Each check reserves its calls in the `opendota_calls` table before it makes them. If the reservation would pass 50 calls in the last minute or 2,800 in the last 24 hours (`OPENDOTA_LIMITS`), the check makes no calls and shows "Medal checks are busy right now". The limits sit below OpenDota's to leave room for its own counting.
+- **A 429 pauses every check for a minute.** When OpenDota answers 429, Dewarded stores a pause time in `opendota_pause` (`RATE_LIMIT_PAUSE_MS`). Until then, every check reports the rate limit without calling OpenDota.
+
+The page owner can still refresh at most once an hour. The reservation and the pause check run in one queued write transaction, so concurrent requests on the one server cannot overspend the budget.
 
 OpenDota processes the refresh request in the background. A check can still show the previous medal, and the next refresh picks up the new one.
 
