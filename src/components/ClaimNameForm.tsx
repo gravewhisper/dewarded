@@ -29,8 +29,8 @@ export function ClaimNameForm({ current, back }: Props) {
         <button className="button primary">{current === null ? 'Create my page' : 'Save'}</button>
       </div>
       <p id="claim-username-help" className="muted small flush">
-        Shown on your page as a claim. Medallion can't confirm it, so readers check that your
-        Reddit profile links back to the page.
+        Enter your own Reddit username, exactly as it appears on your profile. Your page only
+        counts as proof once your Reddit profile links back to it.
       </p>
     </form>
   )

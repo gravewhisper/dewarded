@@ -64,6 +64,10 @@ function ClaimPage() {
           Reddit doesn't let Medallion check this automatically. To confirm, open their Reddit
           profile and check that it links to this page.
         </p>
+        <p className="small">
+          <strong>How to check this:</strong> Open u/{c.claimedRedditUsername}'s Reddit profile. If
+          it links to this exact page, the claim is real. If not, treat it as unverified.
+        </p>
         <a className="button secondary" href={profileUrl} rel="nofollow noopener">
           Open u/{c.claimedRedditUsername} on Reddit
         </a>

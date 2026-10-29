@@ -126,25 +126,34 @@ function BacklinkAccount({
     <main className="page">
       <h1>Your medal page</h1>
       {error && <p className="error">{error}</p>}
-      <section className="card card-pad share-link">
-        <h2 className="flush">Your link</h2>
-        <p className="share-url">
-          <a href={pagePath}>{pageUrl}</a>
-        </p>
-        <div className="actions">
-          <CopyLinkButton path={pagePath} />
-          <Link className="button secondary" to="/p/$id" params={{ id: claim.id }}>
-            Open page
-          </Link>
-        </div>
-        <ol className="share-steps">
-          <li>
-            Add this link to your Reddit profile (profile settings, under social links or the
-            about/bio text).
-          </li>
-          <li>Readers click your profile to confirm.</li>
-        </ol>
-      </section>
+      <ol className="card steps share-link">
+        <li data-state="done">
+          <span className="step-n">1</span>
+          <div>
+            <h2>
+              Claimed u/{claim.claimedRedditUsername}
+              <span className="caps step-status">Done</span>
+            </h2>
+          </div>
+        </li>
+        <li data-state="current">
+          <span className="step-n">2</span>
+          <div>
+            <h2>Add your Medallion link to your Reddit profile</h2>
+            <p>Put it in your profile settings, under social links or in the about/bio text.</p>
+            <p className="share-url">
+              <a href={pagePath}>{pageUrl}</a>
+            </p>
+            <div className="actions">
+              <CopyLinkButton path={pagePath} />
+              <Link className="button secondary" to="/p/$id" params={{ id: claim.id }}>
+                Open page
+              </Link>
+            </div>
+            <p className="share-note">Readers confirm it by opening your profile.</p>
+          </div>
+        </li>
+      </ol>
       <AccountFacts
         check={claim}
         extra={

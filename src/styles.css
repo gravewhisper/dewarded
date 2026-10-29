@@ -498,24 +498,23 @@ form {
   color: var(--muted);
 }
 
-.share-link h2 {
-  font-size: 1.125rem;
+.claim-note strong {
+  color: var(--text);
 }
 
-.share-url {
-  margin: 8px 0 12px;
+.steps.share-link {
+  margin-bottom: 1.25rem;
+}
+
+.steps .share-url {
+  margin: 0 0 12px;
   font-family: var(--mono);
   font-size: 0.9375rem;
+  color: var(--text);
 }
 
-.share-steps {
-  margin: 16px 0 0;
-  padding-left: 1.25rem;
-  color: var(--muted);
-}
-
-.share-steps li + li {
-  margin-top: 4px;
+.steps .share-note {
+  margin: 12px 0 0;
 }
 
 .name-form {
@@ -812,8 +811,8 @@ form {
     padding: 14px 16px;
   }
 
-  .share-url {
-    font-size: 0.8125rem;
+  .steps .share-url {
+    font-size: 0.75rem;
   }
 
   .account {
