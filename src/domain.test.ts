@@ -8,6 +8,7 @@ import {
   claimIdFromBytes,
   parseClaimId,
   parseRedditUsername,
+  parseSteamId64,
   parseVerifyMode,
   publicClaim,
   type ClaimId,
@@ -26,6 +27,13 @@ import {
 } from './domain.ts'
 
 import REGION_NAMES from './server/regions.json' with { type: 'json' }
+
+test('a Steam ID is exactly 17 digits', () => {
+  assert.equal(parseSteamId64('76561198065514372'), '76561198065514372')
+  for (const bad of ['', '7656119806551437', '765611980655143721', '7656119806551437a', ' 76561198065514372']) {
+    assert.equal(parseSteamId64(bad), null, bad)
+  }
+})
 
 test('steamId64 converts to the 32-bit account id', () => {
   assert.equal(steamId64ToAccountId('76561198065514372'), 105248644)

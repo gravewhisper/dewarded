@@ -14,6 +14,18 @@ export function publicRegion(region: Region): PublicRegion {
   return { name: region.name, percent: Math.round(region.share * 100) }
 }
 
+export type SteamId64 = string & { readonly __brand: 'SteamId64' }
+
+export type SteamKey = string & { readonly __brand: 'SteamKey' }
+
+export type SteamIdentity = { steamId64: SteamId64; steamKey: SteamKey }
+
+const STEAM_ID64 = /^\d{17}$/
+
+export function parseSteamId64(raw: string): SteamId64 | null {
+  return STEAM_ID64.test(raw) ? (raw as SteamId64) : null
+}
+
 export type SteamCheck = {
   steamId64: string
   accountId: number

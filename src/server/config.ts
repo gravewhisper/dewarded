@@ -15,10 +15,24 @@ function required(name: string, devDefault: () => string): string {
   return devDefault()
 }
 
+export const DEV_STEAM_ID_PEPPER = '0'.repeat(64)
+
+const STEAM_ID_PEPPER = /^[0-9a-f]{32,}$/i
+
+export function parseSteamIdPepper(raw: string | undefined, production: boolean): string {
+  if (!raw) {
+    if (production) throw new Error('STEAM_ID_PEPPER must be set in production')
+    return DEV_STEAM_ID_PEPPER
+  }
+  if (!STEAM_ID_PEPPER.test(raw)) throw new Error('STEAM_ID_PEPPER must be at least 32 hex characters')
+  return raw
+}
+
 export const config = {
   isProduction,
   publicUrl: required('PUBLIC_URL', () => 'http://localhost:3000').replace(/\/$/, ''),
   sessionSecret: required('SESSION_SECRET', ephemeralDevSessionSecret),
+  steamIdPepper: parseSteamIdPepper(process.env.STEAM_ID_PEPPER, isProduction),
   databaseUrl: process.env.DATABASE_URL || 'file:./data/dewarded.db',
   databaseAuthToken: process.env.DATABASE_AUTH_TOKEN || undefined,
   reddit: process.env.REDDIT_CLIENT_ID
