@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { LIQUIPEDIA_MMR_URL } from '#/components/InfoPopover'
 import { MAX_MMR, MIN_SELF_REPORTED_MMR, formatMmr } from '#/domain'
-import { REPO_URL } from '#/site'
+import { PRIVACY_EMAIL, REPO_URL } from '#/site'
 
 const DESCRIPTION =
   'How the Steam login works, why Dewarded beats posting a Dotabuff link, how to check a Reddit name, and what Dewarded stores.'
@@ -131,6 +131,9 @@ const QUESTIONS: Question[] = [
         <p>
           "Delete my data" on <Link to="/me">My link</Link> removes all of it and your page.{' '}
           <Link to="/privacy">The privacy page</Link> has the full list.
+        </p>
+        <p>
+          For privacy requests, email <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>.
         </p>
       </>
     ),

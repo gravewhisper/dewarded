@@ -1,6 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { getVerifyMode } from '#/serverFns'
-import { ISSUES_URL } from '#/site'
+import { ISSUES_URL, PRIVACY_EMAIL, REPO_URL } from '#/site'
 
 export const Route = createFileRoute('/privacy')({
   head: () => ({ meta: [{ title: 'Privacy | Dewarded' }] }),
@@ -12,18 +12,119 @@ function PrivacyPage() {
   return Route.useLoaderData() === 'backlink' ? <BacklinkPrivacy /> : <RedditPrivacy />
 }
 
-function SharedSections() {
+type ModeCopy = {
+  cookieContents: string
+  signIn: React.ReactNode
+  publicPagePath: React.ReactNode
+  consent: string
+  corrections: React.ReactNode
+}
+
+const BACKLINK: ModeCopy = {
+  cookieContents: 'your Steam ID',
+  signIn: <li>Steam handles the sign-in.</li>,
+  publicPagePath: (
+    <>
+      The path of a public page is its random address, such as <code>/p/k3x7q2mwab</code>.
+    </>
+  ),
+  consent: 'You give it by signing in through Steam and claiming a Reddit username.',
+  corrections: (
+    <li>
+      Correct it. On <Link to="/me">My link</Link> you can change the Reddit username you claimed
+      and, once you are Immortal, change or clear your MMR. "Refresh medal" on your page checks
+      your medal again.
+    </li>
+  ),
+}
+
+const REDDIT: ModeCopy = {
+  cookieContents: 'your Reddit username',
+  signIn: <li>Reddit and Steam handle the logins.</li>,
+  publicPagePath: (
+    <>
+      The path of a public page contains your Reddit username, such as <code>/u/yourname</code>.
+    </>
+  ),
+  consent: 'You give it by logging in with Reddit and linking your Steam account.',
+  corrections: (
+    <li>
+      Correct it. Once you are Immortal you can change or clear your MMR on{' '}
+      <Link to="/me">My link</Link>. "Refresh medal" on your page checks your medal again. To
+      link a different Steam account, unlink Steam on My link and link the other one. Your Reddit
+      username comes from your Reddit login, so to use another one, log in with that account.
+    </li>
+  ),
+}
+
+function SharedSections({ copy }: { copy: ModeCopy }) {
   return (
     <>
-      <h2>Deleting your data</h2>
+      <h2>Cookies</h2>
       <p>
-        "Delete my data" on <Link to="/me">My link</Link> removes your record immediately and
-        your page stops existing.
+        Dewarded sets one cookie. It is a signed login cookie with {copy.cookieContents}, so you
+        stay signed in for up to 7 days. It is set only once you start signing in, and logging out or
+        deleting your data removes it. Dewarded sets no analytics or tracking cookies, so there is
+        no cookie banner.
       </p>
 
-      <h2>Questions</h2>
+      <h2>Who else handles your data</h2>
+      <ul>
+        <li>
+          Fly.io hosts the site and the database in Singapore. Like any web host, it processes
+          request data such as IP addresses.
+        </li>
+        {copy.signIn}
+        <li>OpenDota receives your Dota account ID when Dewarded checks your medal.</li>
+      </ul>
       <p>
-        Open an issue on <a href={ISSUES_URL}>GitHub</a>.
+        This means your data is processed outside the EU. The fonts are served by Dewarded itself,
+        so pages load nothing from Google or any other third party. Other sites are contacted only
+        when you click a link to them.
+      </p>
+
+      <h2>Why Dewarded can store it</h2>
+      <p>
+        Dewarded stores your data only with your consent. {copy.consent} You can withdraw consent
+        at any time by deleting your data.
+      </p>
+
+      <h2>How long it is kept</h2>
+      <p>
+        Your record stays until you delete it. Refreshing your medal replaces the old medal,
+        leaderboard rank, region and check date, so no history builds up.
+      </p>
+      <p>
+        The server also logs each request's method, path, status and response time, and any server
+        errors. The log leaves out query strings, IP addresses, Steam IDs and Dota account IDs.{' '}
+        {copy.publicPagePath} Fly.io keeps these logs for a limited time.
+      </p>
+
+      <h2>Your rights</h2>
+      <ul>
+        <li>
+          See what is stored about you. <Link to="/me">My link</Link> shows your Steam ID and links
+          to your public page, which shows the rest. Your Dota account ID is a shorter form of your
+          Steam ID.
+        </li>
+        {copy.corrections}
+        <li>
+          Delete it. "Delete my data" on <Link to="/me">My link</Link> removes your record
+          immediately and your page stops existing.
+        </li>
+      </ul>
+
+      <h2>Age</h2>
+      <p>You must be at least 16 to use Dewarded.</p>
+
+      <h2>Who runs Dewarded</h2>
+      <p>
+        Dewarded is a free, open-source hobby project. The code is on{' '}
+        <a href={REPO_URL}>GitHub</a>.
+      </p>
+      <p>
+        For privacy requests, email <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>. For
+        everything else, open an issue on <a href={ISSUES_URL}>GitHub</a>.
       </p>
     </>
   )
@@ -65,14 +166,6 @@ function BacklinkPrivacy() {
         </li>
       </ul>
 
-      <h2>Kept only in your browser</h2>
-      <ul>
-        <li>
-          A signed login cookie with your Steam ID, so you stay signed in for up to 7 days.
-          Logging out or deleting your data removes it.
-        </li>
-      </ul>
-
       <h2>Not stored</h2>
       <ul>
         <li>Your Steam password. Dewarded never sees it.</li>
@@ -83,16 +176,7 @@ function BacklinkPrivacy() {
         <li>Your match history. Only the resulting region is saved.</li>
       </ul>
 
-      <h2>Other services involved</h2>
-      <ul>
-        <li>Steam handles the sign-in.</li>
-        <li>OpenDota receives your Dota account ID when Dewarded checks your medal.</li>
-        <li>
-          Fly.io hosts the site. Like any web host, it processes request data such as IP addresses.
-        </li>
-      </ul>
-
-      <SharedSections />
+      <SharedSections copy={BACKLINK} />
     </main>
   )
 }
@@ -129,14 +213,6 @@ function RedditPrivacy() {
         </li>
       </ul>
 
-      <h2>Kept only in your browser</h2>
-      <ul>
-        <li>
-          A signed login cookie with your Reddit username, so you stay logged in for up to 7 days.
-          Logging out or deleting your data removes it.
-        </li>
-      </ul>
-
       <h2>Not stored</h2>
       <ul>
         <li>Your Reddit or Steam password. Dewarded never sees them.</li>
@@ -147,16 +223,7 @@ function RedditPrivacy() {
         <li>Your match history. Only the resulting region is saved.</li>
       </ul>
 
-      <h2>Other services involved</h2>
-      <ul>
-        <li>Reddit and Steam handle the logins.</li>
-        <li>OpenDota receives your Dota account ID when Dewarded checks your medal.</li>
-        <li>
-          Fly.io hosts the site. Like any web host, it processes request data such as IP addresses.
-        </li>
-      </ul>
-
-      <SharedSections />
+      <SharedSections copy={REDDIT} />
     </main>
   )
 }
