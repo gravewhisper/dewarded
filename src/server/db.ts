@@ -1,7 +1,20 @@
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { createClient, type Client, type Row, type Transaction } from '@libsql/client'
-import { carriedMmr, mmrAllowed, type MedalCheck, type Medal, type Region, type Verification } from '#/domain'
+import { randomBytes } from 'node:crypto'
+import {
+  CLAIM_ID_LENGTH,
+  carriedMmr,
+  claimIdFromBytes,
+  mmrAllowed,
+  type Claim,
+  type ClaimId,
+  type MedalCheck,
+  type Medal,
+  type Region,
+  type SteamCheck,
+  type Verification,
+} from '#/domain'
 import { config } from './config'
 
 let clientPromise: Promise<Client> | null = null
@@ -34,18 +47,41 @@ async function open(): Promise<Client> {
   if (!columns.some((column) => column.name === 'self_reported_mmr')) {
     await client.execute('ALTER TABLE verifications ADD COLUMN self_reported_mmr INTEGER')
   }
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS claims (
+      id TEXT PRIMARY KEY,
+      steam_id64 TEXT UNIQUE NOT NULL,
+      account_id INTEGER NOT NULL,
+      claimed_reddit_username TEXT NOT NULL,
+      medal TEXT NOT NULL,
+      region TEXT,
+      checked_at INTEGER NOT NULL,
+      self_reported_mmr INTEGER
+    )
+  `)
   return client
 }
 
-function toVerification(row: Row): Verification {
+function toSteamCheck(row: Row): SteamCheck & { selfReportedMmr: number | null } {
   return {
-    redditUsername: String(row.reddit_username),
     steamId64: String(row.steam_id64),
     accountId: Number(row.account_id),
     medal: JSON.parse(String(row.medal)) as Medal,
     region: row.region === null ? null : (JSON.parse(String(row.region)) as Region),
     checkedAt: new Date(Number(row.checked_at)),
     selfReportedMmr: row.self_reported_mmr === null ? null : Number(row.self_reported_mmr),
+  }
+}
+
+function toVerification(row: Row): Verification {
+  return { ...toSteamCheck(row), redditUsername: String(row.reddit_username) }
+}
+
+function toClaim(row: Row): Claim {
+  return {
+    ...toSteamCheck(row),
+    id: String(row.id) as ClaimId,
+    claimedRedditUsername: String(row.claimed_reddit_username),
   }
 }
 
@@ -124,5 +160,82 @@ export async function deleteVerification(redditUsername: string): Promise<void> 
   await db.execute({
     sql: 'DELETE FROM verifications WHERE reddit_username = ?',
     args: [redditUsername],
+  })
+}
+
+async function readClaim(db: Client | Transaction, steamId64: string): Promise<Claim | null> {
+  const { rows } = await db.execute({
+    sql: 'SELECT * FROM claims WHERE steam_id64 = ?',
+    args: [steamId64],
+  })
+  return rows[0] ? toClaim(rows[0]) : null
+}
+
+export async function getClaimBySteamId(steamId64: string): Promise<Claim | null> {
+  return readClaim(await getDb(), steamId64)
+}
+
+export async function getClaim(id: ClaimId): Promise<Claim | null> {
+  const { rows } = await (await getDb()).execute({
+    sql: 'SELECT * FROM claims WHERE id = ?',
+    args: [id],
+  })
+  return rows[0] ? toClaim(rows[0]) : null
+}
+
+export function saveClaim(check: SteamCheck, claimedRedditUsername: string): Promise<ClaimId> {
+  return inWriteTransaction(async (tx) => {
+    const previous = await readClaim(tx, check.steamId64)
+    const id = previous?.id ?? claimIdFromBytes(randomBytes(CLAIM_ID_LENGTH))
+    await tx.execute({
+      sql: `INSERT INTO claims (id, steam_id64, account_id, claimed_reddit_username, medal, region, checked_at, self_reported_mmr)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (steam_id64) DO UPDATE SET
+              account_id = excluded.account_id,
+              claimed_reddit_username = excluded.claimed_reddit_username,
+              medal = excluded.medal,
+              region = excluded.region,
+              checked_at = excluded.checked_at,
+              self_reported_mmr = excluded.self_reported_mmr`,
+      args: [
+        id,
+        check.steamId64,
+        check.accountId,
+        claimedRedditUsername,
+        JSON.stringify(check.medal),
+        check.region === null ? null : JSON.stringify(check.region),
+        check.checkedAt.getTime(),
+        carriedMmr(previous, check),
+      ],
+    })
+    return id
+  })
+}
+
+export async function renameClaim(steamId64: string, claimedRedditUsername: string): Promise<boolean> {
+  const { rowsAffected } = await (await getDb()).execute({
+    sql: 'UPDATE claims SET claimed_reddit_username = ? WHERE steam_id64 = ?',
+    args: [claimedRedditUsername, steamId64],
+  })
+  return rowsAffected > 0
+}
+
+export function setClaimMmr(steamId64: string, mmr: number | null): Promise<MmrSaveResult> {
+  return inWriteTransaction(async (tx) => {
+    const current = await readClaim(tx, steamId64)
+    if (!current) return 'not_linked'
+    if (!mmrAllowed(current.medal)) return 'mmr_not_immortal'
+    await tx.execute({
+      sql: 'UPDATE claims SET self_reported_mmr = ? WHERE steam_id64 = ?',
+      args: [mmr, steamId64],
+    })
+    return 'saved'
+  })
+}
+
+export async function deleteClaim(steamId64: string): Promise<void> {
+  await (await getDb()).execute({
+    sql: 'DELETE FROM claims WHERE steam_id64 = ?',
+    args: [steamId64],
   })
 }

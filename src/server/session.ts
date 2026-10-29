@@ -5,6 +5,7 @@ import { config } from './config'
 export type Session = {
   redditUsername?: string
   redditState?: string
+  steamId64?: string
 }
 
 const COOKIE = 'medallion_session'

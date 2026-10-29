@@ -13,6 +13,7 @@
     "test": "node --test 'src/**/*.test.ts'",
     "typecheck": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
+    "seed-claim": "tsx scripts/seed-claim.ts",
     "start": "srvx serve --prod --entry ./dist/server/server.js --static ../client"
   },
   "dependencies": {

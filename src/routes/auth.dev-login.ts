@@ -13,7 +13,7 @@ const FORM = `<!doctype html>
 <main style="font-family:system-ui;max-width:32rem;margin:4rem auto">
   <h1>DEV ONLY: fake Reddit login</h1>
   <p>REDDIT_CLIENT_ID is unset, so this form stands in for Reddit OAuth.
-  It is disabled in production builds and whenever Reddit credentials exist.</p>
+  It is disabled in production builds, in backlink mode, and whenever Reddit credentials exist.</p>
   <form method="post">
     <label>Reddit username <input name="username" required pattern="${REDDIT_USERNAME_PATTERN}"></label>
     <button>Log in as this user</button>

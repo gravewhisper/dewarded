@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto'
+import { parseVerifyMode } from '#/domain'
 
 type RedditCredentials = { clientId: string; clientSecret: string }
 
@@ -24,13 +25,17 @@ export const config = {
         clientSecret: process.env.REDDIT_CLIENT_SECRET ?? '',
       } satisfies RedditCredentials)
     : null,
+  verifyMode: parseVerifyMode(process.env.VERIFY_MODE, Boolean(process.env.REDDIT_CLIENT_ID)),
   userAgent: 'web:medallion:0.1 (opt-in Dota 2 medal verification)',
 }
 
 // import.meta.env.DEV is a build-time constant, so a production build keeps the
 // fake login unreachable even if the host forgets to set NODE_ENV.
 export const devLoginEnabled =
-  import.meta.env?.DEV === true && !config.isProduction && config.reddit === null
+  import.meta.env?.DEV === true &&
+  !config.isProduction &&
+  config.reddit === null &&
+  config.verifyMode === 'reddit'
 
 export function callbackUrl(path: string): string {
   return `${config.publicUrl}${path}`
