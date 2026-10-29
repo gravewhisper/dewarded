@@ -8,7 +8,7 @@ export const Route = createFileRoute('/privacy')({
 
 function PrivacyPage() {
   return (
-    <main>
+    <main className="prose">
       <h1>What Medallion stores</h1>
       <p>
         Medallion stores nothing about you until you finish both the Reddit and the Steam login.
@@ -18,13 +18,18 @@ function PrivacyPage() {
       <h2>Stored and shown publicly on your page</h2>
       <ul>
         <li>Your Reddit username. It is the address of your page.</li>
-        <li>
-          Your Steam ID and Dota account ID. Your page links to your OpenDota profile, which shows
-          your Steam name and any match data you make public in Dota.
-        </li>
         <li>Your medal, and your leaderboard rank if you are on the Immortal leaderboard.</li>
         <li>The region where you play the most ranked games, worked out from OpenDota data.</li>
         <li>When your medal was last checked.</li>
+      </ul>
+
+      <h2>Stored but never shown</h2>
+      <ul>
+        <li>
+          Your Steam ID and Dota account ID. Medallion needs them to check your medal again. Your
+          public page does not show them or link to your Steam or OpenDota profile. Only you see
+          your Steam ID, on <Link to="/me">My link</Link>.
+        </li>
       </ul>
 
       <h2>Kept only in your browser</h2>

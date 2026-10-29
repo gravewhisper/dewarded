@@ -9,21 +9,23 @@ export const Route = createFileRoute('/')({
 function Home() {
   const { deleted } = Route.useSearch()
   return (
-    <main>
+    <main className="prose">
       {deleted && <p className="notice">Your data has been deleted.</p>}
       <h1>Prove your Dota 2 medal on Reddit</h1>
       <p>
-        Medallion is opt-in. Log in with Reddit, then with Steam, and you get a public page at{' '}
-        <code>/u/your-name</code> showing the medal OpenDota reports for that Steam account. Link
-        it in a comment when your bracket matters.
+        Anyone can claim a rank in a Reddit comment. Medallion gives you a page at{' '}
+        <code>/u/your-name</code> that shows the medal OpenDota reports for your Steam account,
+        so you can link to it instead of posting a screenshot.
       </p>
-      <ul>
-        <li>Reddit login only reads your username (the <code>identity</code> scope).</li>
-        <li>Steam login only proves which Steam account is yours. We never see your password.</li>
-        <li>You can unlink or delete your data at any time.</li>
-      </ul>
       <p>
-        <a className="button" href="/link">
+        It is opt-in. You log in with Reddit, which tells us only your username, and then sign in
+        through Steam, which proves which account is yours without showing us your password. Your
+        page shows your medal, your likely region and when it was checked. It never shows your
+        Steam account.
+      </p>
+      <p>You can unlink or delete everything at any time.</p>
+      <p>
+        <a className="button primary" href="/link">
           Verify me
         </a>
       </p>
