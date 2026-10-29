@@ -31,7 +31,28 @@ labelled fake form. Production builds compile that form out.
 - `src/server/steam.ts` and `src/server/reddit.ts` own the login protocols.
 - `src/routes/auth.*` and `src/routes/api.*` are server-only handlers.
 
+## Deploying to Fly.io
+
+The app runs as one machine with the SQLite file on a Fly volume. Edit `app`,
+`primary_region` and `PUBLIC_URL` in `fly.toml`, then:
+
+```bash
+fly apps create <app>
+fly volumes create medallion_data --size 1 --region <region>
+fly secrets set SESSION_SECRET=$(openssl rand -hex 32) \
+  REDDIT_CLIENT_ID=... REDDIT_CLIENT_SECRET=...
+fly deploy
+```
+
+Set the Reddit app's redirect URI to `<PUBLIC_URL>/auth/reddit/callback`.
+`pnpm build && pnpm start` runs the same production server locally.
+
 ## OpenDota limits
 
 The free tier allows 60 calls a minute and 3000 a day per server IP. Each check
 costs two calls, so refresh is owner-only with a one-hour cooldown.
+
+## License and credits
+
+MIT, see `LICENSE`. Rank data comes from the [OpenDota API](https://docs.opendota.com).
+Medallion is not affiliated with Valve. Dota 2 is a trademark of Valve Corporation.
