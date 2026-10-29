@@ -2,9 +2,6 @@ import { HeadContent, Link, Scripts, createRootRoute } from '@tanstack/react-rou
 
 import appCss from '../styles.css?url'
 
-const FONTS_URL =
-  'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap'
-
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -14,9 +11,6 @@ export const Route = createRootRoute({
       { title: 'Dewarded' },
     ],
     links: [
-      { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-      { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
-      { rel: 'stylesheet', href: FONTS_URL },
       { rel: 'stylesheet', href: appCss },
       { rel: 'icon', type: 'image/png', href: '/medals/rank_icon_8.png' },
     ],

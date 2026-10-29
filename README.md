@@ -156,5 +156,6 @@ The code is under the [MIT license](LICENSE). The data and images come from thes
 - Rank data comes from the [OpenDota API](https://docs.opendota.com).
 - MMR estimates come from [Liquipedia](https://liquipedia.net/dota2/Matchmaking/Seasonal_Rankings), under CC BY-SA 3.0. The Immortal floor of 5,620 is not a Liquipedia number. Dewarded infers it from Liquipedia's Divine 5 value.
 - The medal images in `public/medals/` belong to Valve and come from [OpenDota's web repo](https://github.com/odota/web). The MIT license does not cover them.
+- The Barlow and Barlow Condensed fonts in `public/fonts/` are by the Barlow Project Authors and come from [Google Fonts](https://fonts.google.com/specimen/Barlow). They are under the SIL Open Font License 1.1, in [`public/fonts/OFL.txt`](public/fonts/OFL.txt).
 
 Dewarded is not affiliated with Valve. Dota 2 is a trademark of Valve Corporation.
