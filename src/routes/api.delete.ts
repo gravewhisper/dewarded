@@ -9,7 +9,7 @@ export const Route = createFileRoute('/api/delete')({
       POST: async ({ request }) => {
         const { redditUsername } = readSession()
         const form = await request.formData().catch(() => new FormData())
-        const outcome = await deleteIfConfirmed(form, redditUsername ? { redditUsername } : null)
+        const outcome = await deleteIfConfirmed(form, async () => (redditUsername ? { redditUsername } : null))
         if (outcome === 'delete_unconfirmed') return redirectTo('/me?error=delete_unconfirmed', 303)
         clearSession()
         return redirectTo('/?deleted=1', 303)

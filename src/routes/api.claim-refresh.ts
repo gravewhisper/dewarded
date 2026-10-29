@@ -10,8 +10,8 @@ export const Route = createFileRoute('/api/claim-refresh')({
     handlers: {
       POST: async () => {
         const signedIn = signedInSteam(readSession())
-        const steam = signedIn && (await provenSteam(signedIn))
-        if (!steam) return redirectTo('/link?error=steam_first', 303)
+        if (!signedIn) return redirectTo('/link?error=steam_first', 303)
+        const steam = await provenSteam(signedIn)
         const result = await refreshClaim(steam)
         if (result.ok) return redirectTo(`/p/${result.id}`, 303)
         const claim = await getClaimBySteamKey(steam.steamKey)

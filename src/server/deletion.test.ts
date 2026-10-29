@@ -4,6 +4,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { SteamCheck, SteamKey } from '#/domain'
+import type { Person } from './db.ts'
 
 process.env.DATABASE_URL = `file:${join(mkdtempSync(join(tmpdir(), 'dewarded-deletion-')), 'test.db')}`
 const db = await import('./db.ts')
@@ -25,16 +26,31 @@ function form(fields: Record<string, string>): FormData {
   return body
 }
 
-test('a delete request without the confirmation tick deletes nothing', async () => {
+function whoseData() {
+  const lookup = {
+    asked: 0,
+    person: async (): Promise<Person> => {
+      lookup.asked++
+      return { steamKey: STEAM_KEY }
+    },
+  }
+  return lookup
+}
+
+test('a delete request without the confirmation tick deletes nothing and never works out whose data it is', async () => {
   await db.saveClaim(check(STEAM_KEY), 'keep_me')
+  const lookup = whoseData()
   for (const body of [form({}), form({ confirm: 'on' })]) {
-    assert.equal(await deleteIfConfirmed(body, { steamKey: STEAM_KEY }), 'delete_unconfirmed')
+    assert.equal(await deleteIfConfirmed(body, lookup.person), 'delete_unconfirmed')
     assert.notEqual(await db.getClaimBySteamKey(STEAM_KEY), null)
   }
+  assert.equal(lookup.asked, 0)
 })
 
 test('a delete request with the confirmation tick deletes the claim', async () => {
   await db.saveClaim(check(STEAM_KEY), 'keep_me')
-  assert.equal(await deleteIfConfirmed(form({ confirm: 'yes' }), { steamKey: STEAM_KEY }), 'deleted')
+  const lookup = whoseData()
+  assert.equal(await deleteIfConfirmed(form({ confirm: 'yes' }), lookup.person), 'deleted')
   assert.equal(await db.getClaimBySteamKey(STEAM_KEY), null)
+  assert.equal(lookup.asked, 1)
 })

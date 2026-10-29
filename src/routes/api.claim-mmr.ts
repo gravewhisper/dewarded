@@ -10,13 +10,13 @@ export const Route = createFileRoute('/api/claim-mmr')({
     handlers: {
       POST: async ({ request }) => {
         const signedIn = signedInSteam(readSession())
-        const steam = signedIn && (await provenSteam(signedIn))
-        if (!steam) return redirectTo('/link?error=steam_first', 303)
+        if (!signedIn) return redirectTo('/link?error=steam_first', 303)
         const form = await request.formData()
         const raw = form.get('action') === 'clear' ? '' : String(form.get('mmr') ?? '')
         const input = parseMmrInput(raw)
         if (!input.ok) return redirectTo('/me?error=mmr_invalid', 303)
-        const result = await setClaimMmr(steam.steamKey, input.mmr)
+        const { steamKey } = await provenSteam(signedIn)
+        const result = await setClaimMmr(steamKey, input.mmr)
         return redirectTo(result === 'saved' ? '/me' : `/me?error=${result}`, 303)
       },
     },

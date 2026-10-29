@@ -12,14 +12,13 @@ export const Route = createFileRoute('/api/claim')({
     handlers: {
       POST: async ({ request }) => {
         const signedIn = signedInSteam(readSession())
-        const steam = signedIn && (await provenSteam(signedIn))
-        if (!steam) return redirectTo('/link?error=steam_first', 303)
+        if (!signedIn) return redirectTo('/link?error=steam_first', 303)
         const form = await request.formData()
         const back = String(form.get('back') ?? '')
         const page = RETURN_PAGES.has(back) ? back : '/me'
         const name = parseRedditUsername(String(form.get('username') ?? ''))
         if (!name) return redirectTo(`${page}?error=claim_name_invalid`, 303)
-        const result = await claimAccount(steam, name)
+        const result = await claimAccount(await provenSteam(signedIn), name)
         return redirectTo(result.ok ? '/me' : `${page}?error=${result.error}`, 303)
       },
     },
