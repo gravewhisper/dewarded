@@ -10,7 +10,7 @@
     "generate-routes": "tsr generate",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test 'src/**/*.test.ts'",
+    "test": "node --import tsx --test 'src/**/*.test.ts'",
     "typecheck": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
     "seed-claim": "tsx scripts/seed-claim.ts",
