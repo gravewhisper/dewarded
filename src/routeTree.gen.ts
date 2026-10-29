@@ -10,33 +10,154 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiDeleteRouteImport } from './routes/api.delete'
+import { Route as ApiLogoutRouteImport } from './routes/api.logout'
+import { Route as ApiRefreshRouteImport } from './routes/api.refresh'
+import { Route as ApiUnlinkRouteImport } from './routes/api.unlink'
+import { Route as AuthDevLoginRouteImport } from './routes/auth.dev-login'
+import { Route as AuthRedditCallbackRouteImport } from './routes/auth.reddit.callback'
+import { Route as AuthRedditStartRouteImport } from './routes/auth.reddit.start'
+import { Route as AuthSteamCallbackRouteImport } from './routes/auth.steam.callback'
+import { Route as AuthSteamStartRouteImport } from './routes/auth.steam.start'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDeleteRoute = ApiDeleteRouteImport.update({
+  id: '/api/delete',
+  path: '/api/delete',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLogoutRoute = ApiLogoutRouteImport.update({
+  id: '/api/logout',
+  path: '/api/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRefreshRoute = ApiRefreshRouteImport.update({
+  id: '/api/refresh',
+  path: '/api/refresh',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUnlinkRoute = ApiUnlinkRouteImport.update({
+  id: '/api/unlink',
+  path: '/api/unlink',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthDevLoginRoute = AuthDevLoginRouteImport.update({
+  id: '/auth/dev-login',
+  path: '/auth/dev-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRedditCallbackRoute = AuthRedditCallbackRouteImport.update({
+  id: '/auth/reddit/callback',
+  path: '/auth/reddit/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRedditStartRoute = AuthRedditStartRouteImport.update({
+  id: '/auth/reddit/start',
+  path: '/auth/reddit/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSteamCallbackRoute = AuthSteamCallbackRouteImport.update({
+  id: '/auth/steam/callback',
+  path: '/auth/steam/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSteamStartRoute = AuthSteamStartRouteImport.update({
+  id: '/auth/steam/start',
+  path: '/auth/steam/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/delete': typeof ApiDeleteRoute
+  '/api/logout': typeof ApiLogoutRoute
+  '/api/refresh': typeof ApiRefreshRoute
+  '/api/unlink': typeof ApiUnlinkRoute
+  '/auth/dev-login': typeof AuthDevLoginRoute
+  '/auth/reddit/callback': typeof AuthRedditCallbackRoute
+  '/auth/reddit/start': typeof AuthRedditStartRoute
+  '/auth/steam/callback': typeof AuthSteamCallbackRoute
+  '/auth/steam/start': typeof AuthSteamStartRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/delete': typeof ApiDeleteRoute
+  '/api/logout': typeof ApiLogoutRoute
+  '/api/refresh': typeof ApiRefreshRoute
+  '/api/unlink': typeof ApiUnlinkRoute
+  '/auth/dev-login': typeof AuthDevLoginRoute
+  '/auth/reddit/callback': typeof AuthRedditCallbackRoute
+  '/auth/reddit/start': typeof AuthRedditStartRoute
+  '/auth/steam/callback': typeof AuthSteamCallbackRoute
+  '/auth/steam/start': typeof AuthSteamStartRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/delete': typeof ApiDeleteRoute
+  '/api/logout': typeof ApiLogoutRoute
+  '/api/refresh': typeof ApiRefreshRoute
+  '/api/unlink': typeof ApiUnlinkRoute
+  '/auth/dev-login': typeof AuthDevLoginRoute
+  '/auth/reddit/callback': typeof AuthRedditCallbackRoute
+  '/auth/reddit/start': typeof AuthRedditStartRoute
+  '/auth/steam/callback': typeof AuthSteamCallbackRoute
+  '/auth/steam/start': typeof AuthSteamStartRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/api/delete'
+    | '/api/logout'
+    | '/api/refresh'
+    | '/api/unlink'
+    | '/auth/dev-login'
+    | '/auth/reddit/callback'
+    | '/auth/reddit/start'
+    | '/auth/steam/callback'
+    | '/auth/steam/start'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/api/delete'
+    | '/api/logout'
+    | '/api/refresh'
+    | '/api/unlink'
+    | '/auth/dev-login'
+    | '/auth/reddit/callback'
+    | '/auth/reddit/start'
+    | '/auth/steam/callback'
+    | '/auth/steam/start'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/delete'
+    | '/api/logout'
+    | '/api/refresh'
+    | '/api/unlink'
+    | '/auth/dev-login'
+    | '/auth/reddit/callback'
+    | '/auth/reddit/start'
+    | '/auth/steam/callback'
+    | '/auth/steam/start'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiDeleteRoute: typeof ApiDeleteRoute
+  ApiLogoutRoute: typeof ApiLogoutRoute
+  ApiRefreshRoute: typeof ApiRefreshRoute
+  ApiUnlinkRoute: typeof ApiUnlinkRoute
+  AuthDevLoginRoute: typeof AuthDevLoginRoute
+  AuthRedditCallbackRoute: typeof AuthRedditCallbackRoute
+  AuthRedditStartRoute: typeof AuthRedditStartRoute
+  AuthSteamCallbackRoute: typeof AuthSteamCallbackRoute
+  AuthSteamStartRoute: typeof AuthSteamStartRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +169,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/delete': {
+      id: '/api/delete'
+      path: '/api/delete'
+      fullPath: '/api/delete'
+      preLoaderRoute: typeof ApiDeleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/logout': {
+      id: '/api/logout'
+      path: '/api/logout'
+      fullPath: '/api/logout'
+      preLoaderRoute: typeof ApiLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/refresh': {
+      id: '/api/refresh'
+      path: '/api/refresh'
+      fullPath: '/api/refresh'
+      preLoaderRoute: typeof ApiRefreshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/unlink': {
+      id: '/api/unlink'
+      path: '/api/unlink'
+      fullPath: '/api/unlink'
+      preLoaderRoute: typeof ApiUnlinkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/dev-login': {
+      id: '/auth/dev-login'
+      path: '/auth/dev-login'
+      fullPath: '/auth/dev-login'
+      preLoaderRoute: typeof AuthDevLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/reddit/callback': {
+      id: '/auth/reddit/callback'
+      path: '/auth/reddit/callback'
+      fullPath: '/auth/reddit/callback'
+      preLoaderRoute: typeof AuthRedditCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/reddit/start': {
+      id: '/auth/reddit/start'
+      path: '/auth/reddit/start'
+      fullPath: '/auth/reddit/start'
+      preLoaderRoute: typeof AuthRedditStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/steam/callback': {
+      id: '/auth/steam/callback'
+      path: '/auth/steam/callback'
+      fullPath: '/auth/steam/callback'
+      preLoaderRoute: typeof AuthSteamCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/steam/start': {
+      id: '/auth/steam/start'
+      path: '/auth/steam/start'
+      fullPath: '/auth/steam/start'
+      preLoaderRoute: typeof AuthSteamStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiDeleteRoute: ApiDeleteRoute,
+  ApiLogoutRoute: ApiLogoutRoute,
+  ApiRefreshRoute: ApiRefreshRoute,
+  ApiUnlinkRoute: ApiUnlinkRoute,
+  AuthDevLoginRoute: AuthDevLoginRoute,
+  AuthRedditCallbackRoute: AuthRedditCallbackRoute,
+  AuthRedditStartRoute: AuthRedditStartRoute,
+  AuthSteamCallbackRoute: AuthSteamCallbackRoute,
+  AuthSteamStartRoute: AuthSteamStartRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

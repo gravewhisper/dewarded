@@ -1,0 +1,21 @@
+export const ERROR_MESSAGES: Record<string, string> = {
+  reddit_first: 'Log in with Reddit before linking Steam.',
+  reddit_denied: 'Reddit login was cancelled.',
+  reddit_state: 'Reddit login expired or was tampered with. Try again.',
+  reddit_failed: 'Reddit did not confirm your identity. Try again.',
+  reddit_unconfigured: 'Reddit login is not configured on this server.',
+  malformed: 'Steam login response was invalid.',
+  rejected: 'Steam did not vouch for that login.',
+  unreachable: 'Could not reach Steam to confirm your login. Try again.',
+  no_profile:
+    'OpenDota has no data for that Steam account. Enable "Expose Public Match Data" in Dota 2 settings, play a match, then try again.',
+  rate_limited: 'OpenDota is rate limiting us. Try again in a few minutes.',
+  upstream: 'OpenDota returned an error. Try again later.',
+  cooldown: 'Checked recently. Try again later.',
+  not_linked: 'No linked Steam account.',
+}
+
+export function errorMessage(code: string | undefined): string | null {
+  if (!code) return null
+  return ERROR_MESSAGES[code] ?? 'Something went wrong.'
+}
