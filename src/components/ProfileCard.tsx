@@ -7,7 +7,6 @@ import {
   medalLabel,
   medalTint,
   mmrAllowed,
-  mmrFit,
   regionShare,
   type PublicVerification,
 } from '#/domain'
@@ -72,19 +71,14 @@ export function ProfileCard({
 
 function SelfReportedMmr({ mmr, redditUsername }: { mmr: number; redditUsername: string }) {
   return (
-    <>
-      <div className="mmr-line">
-        <span className="mmr-label">MMR</span>
-        <span className="mmr-value">{formatMmr(mmr)}</span>
-        <span className="mmr-tag">self-reported</span>
-        <InfoPopover id="mmr-self-about" label="About self-reported MMR">
-          Valve doesn't share MMR numbers outside the game, so Medallion can't check this. u/
-          {redditUsername} typed it in. The medal above is the verified part.
-        </InfoPopover>
-      </div>
-      {mmrFit(mmr) === 'mismatch' && (
-        <p className="mmr-mismatch">Doesn't match the verified medal</p>
-      )}
-    </>
+    <div className="mmr-line">
+      <span className="mmr-label">MMR</span>
+      <span className="mmr-value">{formatMmr(mmr)}</span>
+      <span className="mmr-tag">self-reported</span>
+      <InfoPopover id="mmr-self-about" label="About self-reported MMR">
+        Valve doesn't share MMR numbers outside the game, so Medallion can't check this. u/
+        {redditUsername} typed it in. The medal above is the verified part.
+      </InfoPopover>
+    </div>
   )
 }

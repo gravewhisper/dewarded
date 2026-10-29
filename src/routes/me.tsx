@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { EstimatedMmrAbout } from '#/components/InfoPopover'
 import { MedalBadge } from '#/components/MedalBadge'
-import { MAX_MMR, estimatedMmrRange, formatMmr, formatMmrRange, medalLabel, mmrAllowed } from '#/domain'
+import { MAX_MMR, MIN_SELF_REPORTED_MMR, estimatedMmrRange, formatMmr, formatMmrRange, medalLabel, mmrAllowed } from '#/domain'
 import { errorSearch, formatDay } from '#/format'
 import { errorMessage } from '#/messages'
 import { getAccount } from '#/serverFns'
@@ -123,7 +123,7 @@ function MmrForm({ mmr }: { mmr: number | null }) {
           name="mmr"
           type="number"
           inputMode="numeric"
-          min={0}
+          min={MIN_SELF_REPORTED_MMR}
           max={MAX_MMR}
           step={1}
           defaultValue={mmr ?? ''}

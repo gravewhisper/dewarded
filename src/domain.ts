@@ -41,7 +41,7 @@ export function parseMmrInput(raw: string): { ok: true; mmr: number | null } | {
   if (text === '') return { ok: true, mmr: null }
   if (!/^\d+$/.test(text)) return { ok: false }
   const mmr = Number(text)
-  return mmr <= MAX_MMR ? { ok: true, mmr } : { ok: false }
+  return mmr >= MIN_SELF_REPORTED_MMR && mmr <= MAX_MMR ? { ok: true, mmr } : { ok: false }
 }
 
 export function mmrAllowed(medal: Medal): boolean {
@@ -68,7 +68,8 @@ const MMR_STAR_STARTS = [
 ] as const
 
 const IMMORTAL_MMR = MMR_STAR_STARTS[35]
-const IMMORTAL_TOLERANCE = IMMORTAL_MMR - MMR_STAR_STARTS[34]
+
+export const MIN_SELF_REPORTED_MMR = IMMORTAL_MMR
 
 export type MmrRange = { from: number; to: number | null }
 
@@ -83,10 +84,6 @@ export function estimatedMmrRange(medal: Medal): MmrRange | null {
       return { from: MMR_STAR_STARTS[star], to: MMR_STAR_STARTS[star + 1] - 1 }
     }
   }
-}
-
-export function mmrFit(mmr: number): 'fits' | 'mismatch' {
-  return mmr >= IMMORTAL_MMR - IMMORTAL_TOLERANCE ? 'fits' : 'mismatch'
 }
 
 export function formatMmr(mmr: number): string {

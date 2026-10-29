@@ -8,7 +8,6 @@ import {
   estimatedMmrRange,
   formatMmrRange,
   mmrAllowed,
-  mmrFit,
   parseMmrInput,
   type MedalCheck,
   parseMedal,
@@ -173,13 +172,6 @@ const immortalCheck: MedalCheck = {
   checkedAt: new Date(0),
 }
 
-test('Immortal MMR fits from one Divine step below the Immortal estimate', () => {
-  assert.equal(mmrFit(9000), 'fits')
-  assert.equal(mmrFit(5420), 'fits')
-  assert.equal(mmrFit(5419), 'mismatch')
-  assert.equal(mmrFit(3000), 'mismatch')
-})
-
 test('each star estimates MMR from its start to just before the next star', () => {
   assert.deepEqual(estimatedMmrRange({ kind: 'ranked', tier: 6, stars: 1 }), { from: 3850, to: 4003 })
   assert.deepEqual(estimatedMmrRange({ kind: 'ranked', tier: 1, stars: 1 }), { from: 0, to: 153 })
@@ -222,10 +214,16 @@ test('only Immortal medals can carry a self-reported MMR', () => {
   assert.equal(mmrAllowed({ kind: 'uncalibrated' }), false)
 })
 
-test('MMR input accepts whole numbers from 0 to 20000', () => {
-  assert.deepEqual(parseMmrInput('0'), { ok: true, mmr: 0 })
-  assert.deepEqual(parseMmrInput(' 4250 '), { ok: true, mmr: 4250 })
+test('MMR input accepts whole numbers from the Immortal floor of 5620 to 20000', () => {
+  assert.deepEqual(parseMmrInput('5620'), { ok: true, mmr: 5620 })
+  assert.deepEqual(parseMmrInput(' 9200 '), { ok: true, mmr: 9200 })
   assert.deepEqual(parseMmrInput('20000'), { ok: true, mmr: 20000 })
+})
+
+test('MMR input below the Immortal floor is rejected', () => {
+  assert.deepEqual(parseMmrInput('5619'), { ok: false })
+  assert.deepEqual(parseMmrInput('3000'), { ok: false })
+  assert.deepEqual(parseMmrInput('0'), { ok: false })
 })
 
 test('empty MMR input clears it', () => {
