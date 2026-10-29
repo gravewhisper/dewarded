@@ -3,10 +3,12 @@ import assert from 'node:assert/strict'
 import {
   medalArt,
   medalLabel,
+  medalTint,
   parseMedal,
   pickRegion,
   publicVerification,
   regionLabel,
+  regionShare,
   steamId64ToAccountId,
 } from './domain.ts'
 
@@ -131,4 +133,19 @@ test('public verification carries no Steam identifiers', () => {
   })
   assert.deepEqual(Object.keys(shown).sort(), ['checkedAt', 'medal', 'redditUsername', 'region'])
   assert.doesNotMatch(JSON.stringify(shown), /76561198065514372|105248644/)
+})
+
+test('each medal tier has its own card tint', () => {
+  assert.equal(medalTint({ kind: 'uncalibrated' }), '#24262b')
+  const ranked = ([1, 2, 3, 4, 5, 6, 7] as const).map((tier) =>
+    medalTint({ kind: 'ranked', tier, stars: 1 }),
+  )
+  assert.deepEqual(ranked, ['#3a3226', '#2d3a2c', '#1f3a3e', '#3d3417', '#33244a', '#1b3f35', '#1f2f52'])
+  assert.equal(medalTint({ kind: 'ranked', tier: 6, stars: 5 }), '#1b3f35')
+  assert.equal(medalTint({ kind: 'immortal', leaderboardRank: 16 }), '#4a1d22')
+  assert.equal(medalTint({ kind: 'immortal', leaderboardRank: null }), '#4a1d22')
+})
+
+test('short region shows the name and share', () => {
+  assert.equal(regionShare({ name: 'Europe', games: 91, share: 0.914 }), 'Europe, 91%')
 })
