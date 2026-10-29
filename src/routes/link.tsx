@@ -58,7 +58,16 @@ function LinkPage() {
       </>
     ) : (
       <>
-        <p>Steam confirms which account is yours. Medallion never sees your password.</p>
+        <p>
+          You'll sign in on Steam's own site. Check that the address bar says{' '}
+          <strong>https://steamcommunity.com</strong> before typing anything. Steam only tells
+          Medallion your account ID. Medallion never sees your password, can't trade, and never
+          asks for an API key or trade link.{' '}
+          <a href="https://github.com/gravewhisper/medallion/blob/master/src/server/steam.ts">
+            Read the login code
+          </a>
+          .
+        </p>
         <a className="button primary" href="/auth/steam/start">
           Sign in through Steam
         </a>
