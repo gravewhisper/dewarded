@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import type { SteamId64 } from '#/domain'
 import { DEV_STEAM_ID_PEPPER, parseSteamIdPepper } from './config.ts'
-import { deriveSteamKey } from './steamKey.ts'
+import { deriveSteamKey, provenSteam, signedInSteam, steamIdentity } from './steamKey.ts'
 
 const STEAM_ID = '76561198065514372' as SteamId64
 const NEXT_STEAM_ID = '76561198065514373' as SteamId64
@@ -38,4 +38,20 @@ test('production refuses to start without a pepper of 32 or more hex characters'
 test('development without a pepper uses a fixed one, so dev pages keep their owners across restarts', () => {
   assert.equal(parseSteamIdPepper(undefined, false), DEV_STEAM_ID_PEPPER)
   assert.equal(parseSteamIdPepper(DEV_STEAM_ID_PEPPER, true), DEV_STEAM_ID_PEPPER)
+})
+
+test('a session signed in before keys were stored in it still resolves to its Steam key', async () => {
+  const signedIn = await steamIdentity(STEAM_ID)
+  assert.deepEqual(await signedInSteam({ steamId64: STEAM_ID }), signedIn)
+  assert.deepEqual(await signedInSteam(signedIn), signedIn)
+  assert.equal(await signedInSteam({}), null)
+})
+
+test("a write keys on the session's Steam ID, so a key copied into the session can't act on another page", async () => {
+  const victim = await steamIdentity(NEXT_STEAM_ID)
+  assert.deepEqual(
+    await provenSteam({ steamId64: STEAM_ID, steamKey: victim.steamKey }),
+    await steamIdentity(STEAM_ID),
+  )
+  assert.equal(await provenSteam({}), null)
 })

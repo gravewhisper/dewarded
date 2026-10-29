@@ -14,7 +14,7 @@ async function signInForClaim(
   const verified = await verifySteamCallback(query, steamNonce)
   if (!verified.ok) return linkError(verified.error)
   const steam = await steamIdentity(verified.steamId64)
-  writeSession({ steamId64: steam.steamId64 })
+  writeSession(steam)
   return redirectTo((await getClaimBySteamKey(steam.steamKey)) ? '/me' : '/link')
 }
 
@@ -29,7 +29,7 @@ async function linkToReddit(
   const steam = await steamIdentity(verified.steamId64)
   const linked = await linkAccount(redditUsername, steam)
   if (!linked.ok) return linkError(linked.error)
-  writeSession({ redditUsername, steamId64: steam.steamId64 })
+  writeSession({ redditUsername, ...steam })
   return redirectTo(`/u/${encodeURIComponent(redditUsername)}`)
 }
 

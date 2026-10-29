@@ -4,7 +4,7 @@ import { config, devLoginEnabled } from '#/server/config'
 import { getClaim, getClaimBySteamKey, getVerification } from '#/server/db'
 import { nextRefreshAt } from '#/server/link'
 import { readSession } from '#/server/session'
-import { provenSteam } from '#/server/steamKey'
+import { signedInSteam } from '#/server/steamKey'
 
 export const getVerifyMode = createServerFn({ method: 'GET' }).handler(() => config.verifyMode)
 
@@ -29,7 +29,7 @@ export const getClaimPage = createServerFn({ method: 'GET' })
     if (!claim) return null
     return {
       claim: publicClaim(claim),
-      isOwner: (await provenSteam(readSession()))?.steamKey === claim.steamKey,
+      isOwner: (await signedInSteam(readSession()))?.steamKey === claim.steamKey,
       nextRefreshAt: nextRefreshAt(claim.checkedAt),
       ogImage: `${config.publicUrl}${medalArt(claim.medal).icon}`,
     }
@@ -38,7 +38,7 @@ export const getClaimPage = createServerFn({ method: 'GET' })
 export const getAccount = createServerFn({ method: 'GET' }).handler(async () => {
   const session = readSession()
   if (config.verifyMode === 'backlink') {
-    const steam = await provenSteam(session)
+    const steam = await signedInSteam(session)
     const claim = steam && (await getClaimBySteamKey(steam.steamKey))
     return {
       mode: 'backlink' as const,
@@ -49,7 +49,7 @@ export const getAccount = createServerFn({ method: 'GET' }).handler(async () => 
   }
   const { redditUsername } = session
   const verification = redditUsername ? await getVerification(redditUsername) : null
-  const steam = verification && (await provenSteam(session))
+  const steam = verification && (await signedInSteam(session))
   return {
     mode: 'reddit' as const,
     redditUsername: redditUsername ?? null,
@@ -64,7 +64,7 @@ export type Viewer = { signedIn: boolean; pagePath: string | null }
 export const getViewer = createServerFn({ method: 'GET' }).handler(async (): Promise<Viewer> => {
   const session = readSession()
   if (config.verifyMode === 'backlink') {
-    const steam = await provenSteam(session)
+    const steam = await signedInSteam(session)
     if (!steam) return { signedIn: false, pagePath: null }
     const claim = await getClaimBySteamKey(steam.steamKey)
     return { signedIn: true, pagePath: claim && `/p/${claim.id}` }

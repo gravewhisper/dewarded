@@ -17,6 +17,13 @@ export async function steamIdentity(steamId64: SteamId64): Promise<SteamIdentity
   return { steamId64, steamKey: await deriveSteamKey(steamId64, config.steamIdPepper) }
 }
 
-export async function provenSteam({ steamId64 }: { steamId64?: SteamId64 }): Promise<SteamIdentity | null> {
+type SignedSteam = { steamId64?: SteamId64; steamKey?: SteamKey }
+
+export async function signedInSteam({ steamId64, steamKey }: SignedSteam): Promise<SteamIdentity | null> {
+  if (!steamId64) return null
+  return steamKey ? { steamId64, steamKey } : steamIdentity(steamId64)
+}
+
+export async function provenSteam({ steamId64 }: SignedSteam): Promise<SteamIdentity | null> {
   return steamId64 ? steamIdentity(steamId64) : null
 }
