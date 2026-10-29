@@ -195,9 +195,15 @@ async function readVerification(
 
 let lastWrite: Promise<unknown> = Promise.resolve()
 
+function queued<T>(work: (db: Client) => Promise<T>): Promise<T> {
+  const write = lastWrite.then(async () => work(await getDb()))
+  lastWrite = write.catch(() => {})
+  return write
+}
+
 function inWriteTransaction<T>(work: (tx: Transaction) => Promise<T>): Promise<T> {
-  const write = lastWrite.then(async () => {
-    const tx = await (await getDb()).transaction('write')
+  return queued(async (db) => {
+    const tx = await db.transaction('write')
     try {
       await tx.execute('PRAGMA secure_delete = ON')
       const result = await work(tx)
@@ -207,8 +213,6 @@ function inWriteTransaction<T>(work: (tx: Transaction) => Promise<T>): Promise<T
       tx.close()
     }
   })
-  lastWrite = write.catch(() => {})
-  return write
 }
 
 export async function getVerification(redditUsername: string): Promise<Verification | null> {
@@ -353,8 +357,8 @@ export function setClaimMmr(steamKey: SteamKey, mmr: number | null): Promise<Mmr
 
 export type Person = { steamKey: SteamKey } | { redditUsername: string }
 
-export function deletePersonData(person: Person): Promise<void> {
-  return inWriteTransaction(async (tx) => {
+export async function deletePersonData(person: Person): Promise<void> {
+  await inWriteTransaction(async (tx) => {
     const steamKey =
       'steamKey' in person
         ? person.steamKey
@@ -369,6 +373,9 @@ export function deletePersonData(person: Person): Promise<void> {
     await tx.execute({ sql: 'DELETE FROM verifications WHERE steam_key = ?', args: [steamKey] })
     await tx.execute({ sql: 'DELETE FROM claims WHERE steam_key = ?', args: [steamKey] })
   })
+  if (config.databaseUrl.startsWith('file:')) {
+    await queued((db) => db.execute('PRAGMA wal_checkpoint(TRUNCATE)'))
+  }
 }
 
 const MINUTE_MS = 60 * 1000
