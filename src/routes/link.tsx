@@ -52,7 +52,7 @@ function LinkPage() {
     ) : verification ? (
       <>
         <p>Steam account linked.</p>
-        <a className="button" href="/auth/steam/start">
+        <a className="button secondary" href="/auth/steam/start">
           Re-link Steam
         </a>
       </>
@@ -83,21 +83,21 @@ function LinkPage() {
   }
 
   return (
-    <main>
+    <main className="page">
       <h1>Verify your medal</h1>
       {error && <p className="error">{error}</p>}
-      <p className="consent">
+      <p className="notice">
         Linking makes your Reddit username and your medal public on your Medallion page. Your Steam
         account is never shown. You can delete it any time. <Link to="/privacy">What we store</Link>.
       </p>
-      <ol className="steps">
+      <ol className="card steps">
         {(Object.keys(STEP_TITLES) as StepId[]).map((id, i) => (
           <li key={id} data-state={states[id]}>
-            <span className="step-n">{i + 1}.</span>
+            <span className="step-n">{i + 1}</span>
             <div>
               <h2>
                 {STEP_TITLES[id]}
-                <span className="label">{STATUS_LABELS[states[id]]}</span>
+                <span className="caps step-status">{STATUS_LABELS[states[id]]}</span>
               </h2>
               {bodies[id]}
             </div>

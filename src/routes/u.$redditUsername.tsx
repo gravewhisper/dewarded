@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
-import { MedalBadge } from '#/components/MedalBadge'
+import { CopyLinkButton } from '#/components/CopyLinkButton'
+import { ProfileCard } from '#/components/ProfileCard'
 import { medalLabel, regionLabel } from '#/domain'
 import { errorSearch, formatDate } from '#/format'
 import { errorMessage } from '#/messages'
@@ -46,52 +47,21 @@ function ProfilePage() {
   const error = errorMessage(Route.useSearch().error)
   const coolingDown = nextRefreshAt.getTime() > Date.now()
   return (
-    <main>
-      <article className="record">
-        <MedalBadge medal={v.medal} size={200} />
-        <div>
-          <p className="label">Verified medal record</p>
-          <h1>u/{v.redditUsername}</h1>
-          <dl className="record-dl">
-            <div>
-              <dt>Rank</dt>
-              <dd className="rank-value">{medalLabel(v.medal)}</dd>
-            </div>
-            <div>
-              <dt>Region</dt>
-              <dd>
-                {v.region ? (
-                  <>
-                    {regionLabel(v.region)} <span className="muted">(inferred)</span>
-                  </>
-                ) : (
-                  <span className="muted">Unknown</span>
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt>Checked</dt>
-              <dd>{formatDate(v.checkedAt)}</dd>
-            </div>
-            <div>
-              <dt>Verified by</dt>
-              <dd>Steam login. Medal data from OpenDota.</dd>
-            </div>
-          </dl>
-        </div>
-      </article>
-      {(error || isOwner) && (
-        <section className="owner-tools">
-          {error && <p className="error">{error}</p>}
-          {isOwner && (
-            <form method="post" action="/api/refresh" className="actions">
-              <button disabled={coolingDown}>Refresh medal</button>
-              {coolingDown && (
-                <span className="muted">Available after {formatDate(nextRefreshAt)}.</span>
-              )}
-            </form>
-          )}
-        </section>
+    <main className="page page-center">
+      {error && <p className="error">{error}</p>}
+      <ProfileCard {...v} />
+      <div className="actions">
+        <CopyLinkButton path={`/u/${v.redditUsername}`} />
+        {isOwner && (
+          <form method="post" action="/api/refresh">
+            <button className="button secondary" disabled={coolingDown}>
+              Refresh medal
+            </button>
+          </form>
+        )}
+      </div>
+      {isOwner && coolingDown && (
+        <p className="muted small">Refresh available after {formatDate(nextRefreshAt)}.</p>
       )}
     </main>
   )
@@ -100,15 +70,20 @@ function ProfilePage() {
 function UnknownUser() {
   const { redditUsername } = Route.useParams()
   return (
-    <main>
-      <p className="label">Not verified</p>
-      <h1>u/{redditUsername}</h1>
-      <p>This Reddit user has not linked a Steam account on Medallion, so there is no medal to show.</p>
-      <p>
-        <a className="button primary" href="/link">
-          Verify your own medal
-        </a>
-      </p>
+    <main className="page page-center">
+      <article className="card profile-card unknown-card">
+        <div className="card-bar">
+          <span className="card-user">u/{redditUsername}</span>
+          <span className="caps">Not verified</span>
+        </div>
+        <div className="card-body">
+          <h1>u/{redditUsername} hasn't verified a medal</h1>
+          <p className="muted">There is no Medallion record for this Reddit user.</p>
+          <a className="button primary" href="/link">
+            Verify your own medal
+          </a>
+        </div>
+      </article>
     </main>
   )
 }

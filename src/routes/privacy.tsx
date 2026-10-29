@@ -8,7 +8,7 @@ export const Route = createFileRoute('/privacy')({
 
 function PrivacyPage() {
   return (
-    <main className="prose">
+    <main className="page prose">
       <h1>What Medallion stores</h1>
       <p>
         Medallion stores nothing about you until you finish both the Reddit and the Steam login.
