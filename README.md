@@ -56,3 +56,4 @@ costs two calls, so refresh is owner-only with a one-hour cooldown.
 
 MIT, see `LICENSE`. Rank data comes from the [OpenDota API](https://docs.opendota.com).
 Medallion is not affiliated with Valve. Dota 2 is a trademark of Valve Corporation.
+The medal images in `public/medals/` belong to Valve, come from [OpenDota's web repo](https://github.com/odota/web), and are not covered by the MIT license.
