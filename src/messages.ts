@@ -15,6 +15,9 @@ export const ERROR_MESSAGES: Record<string, string> = {
   not_linked: 'No linked Steam account.',
   mmr_invalid: 'MMR must be a whole number from 5,620 (Immortal) to 20,000. Nothing was saved.',
   mmr_not_immortal: 'Self-reported MMR is only available for Immortal medals.',
+  steam_first: 'Sign in through Steam first.',
+  claim_name_invalid:
+    'Reddit usernames are 3 to 20 letters, numbers, underscores or hyphens. Nothing was saved.',
 }
 
 export function errorMessage(code: string | undefined): string | null {

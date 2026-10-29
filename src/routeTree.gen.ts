@@ -13,12 +13,17 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LinkRouteImport } from './routes/link'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ApiClaimRouteImport } from './routes/api.claim'
+import { Route as ApiClaimDeleteRouteImport } from './routes/api.claim-delete'
+import { Route as ApiClaimMmrRouteImport } from './routes/api.claim-mmr'
+import { Route as ApiClaimRefreshRouteImport } from './routes/api.claim-refresh'
 import { Route as ApiDeleteRouteImport } from './routes/api.delete'
 import { Route as ApiLogoutRouteImport } from './routes/api.logout'
 import { Route as ApiMmrRouteImport } from './routes/api.mmr'
 import { Route as ApiRefreshRouteImport } from './routes/api.refresh'
 import { Route as ApiUnlinkRouteImport } from './routes/api.unlink'
 import { Route as AuthDevLoginRouteImport } from './routes/auth.dev-login'
+import { Route as PIdRouteImport } from './routes/p.$id'
 import { Route as URedditUsernameRouteImport } from './routes/u.$redditUsername'
 import { Route as AuthRedditCallbackRouteImport } from './routes/auth.reddit.callback'
 import { Route as AuthRedditStartRouteImport } from './routes/auth.reddit.start'
@@ -43,6 +48,26 @@ const MeRoute = MeRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiClaimRoute = ApiClaimRouteImport.update({
+  id: '/api/claim',
+  path: '/api/claim',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiClaimDeleteRoute = ApiClaimDeleteRouteImport.update({
+  id: '/api/claim-delete',
+  path: '/api/claim-delete',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiClaimMmrRoute = ApiClaimMmrRouteImport.update({
+  id: '/api/claim-mmr',
+  path: '/api/claim-mmr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiClaimRefreshRoute = ApiClaimRefreshRouteImport.update({
+  id: '/api/claim-refresh',
+  path: '/api/claim-refresh',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDeleteRoute = ApiDeleteRouteImport.update({
@@ -73,6 +98,11 @@ const ApiUnlinkRoute = ApiUnlinkRouteImport.update({
 const AuthDevLoginRoute = AuthDevLoginRouteImport.update({
   id: '/auth/dev-login',
   path: '/auth/dev-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PIdRoute = PIdRouteImport.update({
+  id: '/p/$id',
+  path: '/p/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const URedditUsernameRoute = URedditUsernameRouteImport.update({
@@ -106,12 +136,17 @@ export interface FileRoutesByFullPath {
   '/link': typeof LinkRoute
   '/me': typeof MeRoute
   '/privacy': typeof PrivacyRoute
+  '/api/claim': typeof ApiClaimRoute
+  '/api/claim-delete': typeof ApiClaimDeleteRoute
+  '/api/claim-mmr': typeof ApiClaimMmrRoute
+  '/api/claim-refresh': typeof ApiClaimRefreshRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
   '/api/mmr': typeof ApiMmrRoute
   '/api/refresh': typeof ApiRefreshRoute
   '/api/unlink': typeof ApiUnlinkRoute
   '/auth/dev-login': typeof AuthDevLoginRoute
+  '/p/$id': typeof PIdRoute
   '/u/$redditUsername': typeof URedditUsernameRoute
   '/auth/reddit/callback': typeof AuthRedditCallbackRoute
   '/auth/reddit/start': typeof AuthRedditStartRoute
@@ -123,12 +158,17 @@ export interface FileRoutesByTo {
   '/link': typeof LinkRoute
   '/me': typeof MeRoute
   '/privacy': typeof PrivacyRoute
+  '/api/claim': typeof ApiClaimRoute
+  '/api/claim-delete': typeof ApiClaimDeleteRoute
+  '/api/claim-mmr': typeof ApiClaimMmrRoute
+  '/api/claim-refresh': typeof ApiClaimRefreshRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
   '/api/mmr': typeof ApiMmrRoute
   '/api/refresh': typeof ApiRefreshRoute
   '/api/unlink': typeof ApiUnlinkRoute
   '/auth/dev-login': typeof AuthDevLoginRoute
+  '/p/$id': typeof PIdRoute
   '/u/$redditUsername': typeof URedditUsernameRoute
   '/auth/reddit/callback': typeof AuthRedditCallbackRoute
   '/auth/reddit/start': typeof AuthRedditStartRoute
@@ -141,12 +181,17 @@ export interface FileRoutesById {
   '/link': typeof LinkRoute
   '/me': typeof MeRoute
   '/privacy': typeof PrivacyRoute
+  '/api/claim': typeof ApiClaimRoute
+  '/api/claim-delete': typeof ApiClaimDeleteRoute
+  '/api/claim-mmr': typeof ApiClaimMmrRoute
+  '/api/claim-refresh': typeof ApiClaimRefreshRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
   '/api/mmr': typeof ApiMmrRoute
   '/api/refresh': typeof ApiRefreshRoute
   '/api/unlink': typeof ApiUnlinkRoute
   '/auth/dev-login': typeof AuthDevLoginRoute
+  '/p/$id': typeof PIdRoute
   '/u/$redditUsername': typeof URedditUsernameRoute
   '/auth/reddit/callback': typeof AuthRedditCallbackRoute
   '/auth/reddit/start': typeof AuthRedditStartRoute
@@ -160,12 +205,17 @@ export interface FileRouteTypes {
     | '/link'
     | '/me'
     | '/privacy'
+    | '/api/claim'
+    | '/api/claim-delete'
+    | '/api/claim-mmr'
+    | '/api/claim-refresh'
     | '/api/delete'
     | '/api/logout'
     | '/api/mmr'
     | '/api/refresh'
     | '/api/unlink'
     | '/auth/dev-login'
+    | '/p/$id'
     | '/u/$redditUsername'
     | '/auth/reddit/callback'
     | '/auth/reddit/start'
@@ -177,12 +227,17 @@ export interface FileRouteTypes {
     | '/link'
     | '/me'
     | '/privacy'
+    | '/api/claim'
+    | '/api/claim-delete'
+    | '/api/claim-mmr'
+    | '/api/claim-refresh'
     | '/api/delete'
     | '/api/logout'
     | '/api/mmr'
     | '/api/refresh'
     | '/api/unlink'
     | '/auth/dev-login'
+    | '/p/$id'
     | '/u/$redditUsername'
     | '/auth/reddit/callback'
     | '/auth/reddit/start'
@@ -194,12 +249,17 @@ export interface FileRouteTypes {
     | '/link'
     | '/me'
     | '/privacy'
+    | '/api/claim'
+    | '/api/claim-delete'
+    | '/api/claim-mmr'
+    | '/api/claim-refresh'
     | '/api/delete'
     | '/api/logout'
     | '/api/mmr'
     | '/api/refresh'
     | '/api/unlink'
     | '/auth/dev-login'
+    | '/p/$id'
     | '/u/$redditUsername'
     | '/auth/reddit/callback'
     | '/auth/reddit/start'
@@ -212,12 +272,17 @@ export interface RootRouteChildren {
   LinkRoute: typeof LinkRoute
   MeRoute: typeof MeRoute
   PrivacyRoute: typeof PrivacyRoute
+  ApiClaimRoute: typeof ApiClaimRoute
+  ApiClaimDeleteRoute: typeof ApiClaimDeleteRoute
+  ApiClaimMmrRoute: typeof ApiClaimMmrRoute
+  ApiClaimRefreshRoute: typeof ApiClaimRefreshRoute
   ApiDeleteRoute: typeof ApiDeleteRoute
   ApiLogoutRoute: typeof ApiLogoutRoute
   ApiMmrRoute: typeof ApiMmrRoute
   ApiRefreshRoute: typeof ApiRefreshRoute
   ApiUnlinkRoute: typeof ApiUnlinkRoute
   AuthDevLoginRoute: typeof AuthDevLoginRoute
+  PIdRoute: typeof PIdRoute
   URedditUsernameRoute: typeof URedditUsernameRoute
   AuthRedditCallbackRoute: typeof AuthRedditCallbackRoute
   AuthRedditStartRoute: typeof AuthRedditStartRoute
@@ -253,6 +318,34 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/claim': {
+      id: '/api/claim'
+      path: '/api/claim'
+      fullPath: '/api/claim'
+      preLoaderRoute: typeof ApiClaimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/claim-delete': {
+      id: '/api/claim-delete'
+      path: '/api/claim-delete'
+      fullPath: '/api/claim-delete'
+      preLoaderRoute: typeof ApiClaimDeleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/claim-mmr': {
+      id: '/api/claim-mmr'
+      path: '/api/claim-mmr'
+      fullPath: '/api/claim-mmr'
+      preLoaderRoute: typeof ApiClaimMmrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/claim-refresh': {
+      id: '/api/claim-refresh'
+      path: '/api/claim-refresh'
+      fullPath: '/api/claim-refresh'
+      preLoaderRoute: typeof ApiClaimRefreshRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/delete': {
@@ -295,6 +388,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/dev-login'
       fullPath: '/auth/dev-login'
       preLoaderRoute: typeof AuthDevLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$id': {
+      id: '/p/$id'
+      path: '/p/$id'
+      fullPath: '/p/$id'
+      preLoaderRoute: typeof PIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/u/$redditUsername': {
@@ -340,12 +440,17 @@ const rootRouteChildren: RootRouteChildren = {
   LinkRoute: LinkRoute,
   MeRoute: MeRoute,
   PrivacyRoute: PrivacyRoute,
+  ApiClaimRoute: ApiClaimRoute,
+  ApiClaimDeleteRoute: ApiClaimDeleteRoute,
+  ApiClaimMmrRoute: ApiClaimMmrRoute,
+  ApiClaimRefreshRoute: ApiClaimRefreshRoute,
   ApiDeleteRoute: ApiDeleteRoute,
   ApiLogoutRoute: ApiLogoutRoute,
   ApiMmrRoute: ApiMmrRoute,
   ApiRefreshRoute: ApiRefreshRoute,
   ApiUnlinkRoute: ApiUnlinkRoute,
   AuthDevLoginRoute: AuthDevLoginRoute,
+  PIdRoute: PIdRoute,
   URedditUsernameRoute: URedditUsernameRoute,
   AuthRedditCallbackRoute: AuthRedditCallbackRoute,
   AuthRedditStartRoute: AuthRedditStartRoute,

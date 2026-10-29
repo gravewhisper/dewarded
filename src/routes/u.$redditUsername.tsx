@@ -49,7 +49,7 @@ function ProfilePage() {
   return (
     <main className="page page-center">
       {error && <p className="error">{error}</p>}
-      <ProfileCard {...v} />
+      <ProfileCard identity={{ kind: 'reddit-verified', username: v.redditUsername }} {...v} />
       <div className="actions">
         <CopyLinkButton path={`/u/${v.redditUsername}`} />
         {isOwner && (

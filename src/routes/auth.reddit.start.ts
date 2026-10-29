@@ -8,6 +8,7 @@ export const Route = createFileRoute('/auth/reddit/start')({
   server: {
     handlers: {
       GET: () => {
+        if (config.verifyMode === 'backlink') return redirectTo('/link')
         if (!config.reddit) {
           return devLoginEnabled ? redirectTo('/auth/dev-login') : linkError('reddit_unconfigured')
         }

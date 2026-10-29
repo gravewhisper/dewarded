@@ -12,10 +12,22 @@ import {
 } from '#/domain'
 import { formatDay } from '#/format'
 
-type Props = PublicVerification & { example?: boolean }
+export type CardIdentity =
+  | { kind: 'reddit-verified'; username: string }
+  | { kind: 'reddit-claimed'; username: string }
+
+type Props = Pick<PublicVerification, 'medal' | 'region' | 'checkedAt' | 'selfReportedMmr'> & {
+  identity: CardIdentity
+  example?: boolean
+}
+
+const BAR_LABELS: Record<CardIdentity['kind'], string> = {
+  'reddit-verified': 'Verified',
+  'reddit-claimed': 'Name claimed',
+}
 
 export function ProfileCard({
-  redditUsername,
+  identity,
   medal,
   region,
   checkedAt,
@@ -30,13 +42,16 @@ export function ProfileCard({
       className="card profile-card"
       style={{ '--tint': medalTint(medal) } as React.CSSProperties}
     >
-      <div className="card-bar">
-        <span className="card-user">u/{redditUsername}</span>
-        <span className="caps">{example ? 'Example' : 'Verified'}</span>
+      <div className="card-bar" data-identity={identity.kind}>
+        <span className="card-user">u/{identity.username}</span>
+        <span className="caps card-bar-label">{example ? 'Example' : BAR_LABELS[identity.kind]}</span>
       </div>
       <div className="card-medal">
         <MedalBadge medal={medal} size={240} />
         <MedalName className="medal-name">{medalLabel(medal)}</MedalName>
+        {identity.kind === 'reddit-claimed' && (
+          <p className="caps medal-verified">Verified medal · Steam login</p>
+        )}
       </div>
       <dl className="card-facts">
         <div>
@@ -60,7 +75,7 @@ export function ProfileCard({
             <EstimatedMmrAbout id="mmr-estimate-about" />
           </div>
           {reportedMmr !== null && (
-            <SelfReportedMmr mmr={reportedMmr} redditUsername={redditUsername} />
+            <SelfReportedMmr mmr={reportedMmr} identity={identity} />
           )}
         </div>
       )}
@@ -69,15 +84,18 @@ export function ProfileCard({
   )
 }
 
-function SelfReportedMmr({ mmr, redditUsername }: { mmr: number; redditUsername: string }) {
+function SelfReportedMmr({ mmr, identity }: { mmr: number; identity: CardIdentity }) {
   return (
     <div className="mmr-line">
       <span className="mmr-label">MMR</span>
       <span className="mmr-value">{formatMmr(mmr)}</span>
       <span className="mmr-tag">self-reported</span>
       <InfoPopover id="mmr-self-about" label="About self-reported MMR">
-        Valve doesn't share MMR numbers outside the game, so Medallion can't check this. u/
-        {redditUsername} typed it in. The medal above is the verified part.
+        Valve doesn't share MMR numbers outside the game, so Medallion can't check this.{' '}
+        {identity.kind === 'reddit-verified'
+          ? `u/${identity.username} typed it in.`
+          : 'The owner of this Steam account typed it in.'}{' '}
+        The medal above is the verified part.
       </InfoPopover>
     </div>
   )
