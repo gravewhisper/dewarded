@@ -10,7 +10,7 @@ import {
   steamId64ToAccountId,
 } from './domain.ts'
 
-const REGION_NAMES = { '1': 'US WEST', '3': 'EUROPE', '8': 'STOCKHOLM', '9': 'AUSTRIA' }
+import REGION_NAMES from './server/regions.json' with { type: 'json' }
 
 test('steamId64 converts to the 32-bit account id', () => {
   assert.equal(steamId64ToAccountId('76561198065514372'), 105248644)
@@ -54,10 +54,23 @@ test('region is the one with the most ranked games', () => {
     NaN: { games: 4, win: 2 },
   }
   const region = pickRegion(counts, REGION_NAMES)
-  assert.equal(region?.name, 'EUROPE')
+  assert.equal(region?.name, 'Europe')
   assert.equal(region?.games, 1506)
   assert.equal(region?.share, 1506 / 1559)
   assert.equal(regionLabel(region!), 'most ranked games in Europe, 97%')
+})
+
+test('Perfect World servers count together as China', () => {
+  const counts = {
+    '3': { games: 100, win: 50 },
+    '12': { games: 40, win: 20 },
+    '13': { games: 40, win: 20 },
+    '25': { games: 30, win: 15 },
+  }
+  const region = pickRegion(counts, REGION_NAMES)
+  assert.equal(region?.name, 'China')
+  assert.equal(region?.games, 110)
+  assert.equal(regionLabel(region!), 'most ranked games in China, 52%')
 })
 
 test('no ranked games means no region', () => {

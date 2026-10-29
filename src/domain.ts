@@ -6,7 +6,7 @@ export type Medal =
   | { kind: 'ranked'; tier: RankedTier; stars: Stars }
   | { kind: 'immortal'; leaderboardRank: number | null }
 
-export type Region = { id: number; name: string; games: number; share: number }
+export type Region = { name: string; games: number; share: number }
 
 export type Verification = {
   redditUsername: string
@@ -73,21 +73,20 @@ export function pickRegion(
   counts: RegionCounts,
   regionNames: Record<string, string>,
 ): Region | null {
+  const gamesByName = new Map<string, number>()
   let total = 0
-  let best: { id: number; games: number } | null = null
   for (const [key, { games }] of Object.entries(counts)) {
     const id = Number(key)
     if (!Number.isInteger(id) || games <= 0) continue
+    const name = regionNames[key] ?? `Region ${id}`
+    gamesByName.set(name, (gamesByName.get(name) ?? 0) + games)
     total += games
-    if (!best || games > best.games) best = { id, games }
   }
-  if (!best) return null
-  return {
-    id: best.id,
-    name: regionNames[String(best.id)] ?? `Region ${best.id}`,
-    games: best.games,
-    share: best.games / total,
+  let best: Region | null = null
+  for (const [name, games] of gamesByName) {
+    if (!best || games > best.games) best = { name, games, share: games / total }
   }
+  return best
 }
 
 export function medalLabel(medal: Medal): string {
@@ -126,11 +125,7 @@ export function medalArt(medal: Medal): MedalArt {
 }
 
 export function regionLabel(region: Region): string {
-  const name = region.name
-    .split(' ')
-    .map((w) => (w.length <= 2 ? w : w[0] + w.slice(1).toLowerCase()))
-    .join(' ')
-  return `most ranked games in ${name}, ${Math.round(region.share * 100)}%`
+  return `most ranked games in ${region.name}, ${Math.round(region.share * 100)}%`
 }
 
 export function normalizeRedditUsername(name: string): string {
