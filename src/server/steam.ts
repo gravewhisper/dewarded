@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import { callbackUrl, config } from './config'
 
 const OP_ENDPOINT = 'https://steamcommunity.com/openid/login'
@@ -7,11 +8,19 @@ const MUST_BE_SIGNED = ['claimed_id', 'identity', 'return_to', 'response_nonce',
 
 export const STEAM_CALLBACK_PATH = '/auth/steam/callback'
 
-export function steamLoginUrl(): string {
+export function newSteamNonce(): string {
+  return randomBytes(18).toString('base64url')
+}
+
+function returnTo(nonce: string): string {
+  return `${callbackUrl(STEAM_CALLBACK_PATH)}?n=${nonce}`
+}
+
+export function steamLoginUrl(nonce: string): string {
   const params = new URLSearchParams({
     'openid.ns': 'http://specs.openid.net/auth/2.0',
     'openid.mode': 'checkid_setup',
-    'openid.return_to': callbackUrl(STEAM_CALLBACK_PATH),
+    'openid.return_to': returnTo(nonce),
     'openid.realm': config.publicUrl,
     'openid.identity': IDENTIFIER_SELECT,
     'openid.claimed_id': IDENTIFIER_SELECT,
@@ -19,16 +28,17 @@ export function steamLoginUrl(): string {
   return `${OP_ENDPOINT}?${params}`
 }
 
-export type SteamVerifyError = 'malformed' | 'rejected' | 'unreachable'
+export type SteamVerifyError = 'steam_session' | 'malformed' | 'rejected' | 'unreachable'
 
 export async function verifySteamCallback(
   query: URLSearchParams,
+  sessionNonce: string | undefined,
 ): Promise<{ ok: true; steamId64: string } | { ok: false; error: SteamVerifyError }> {
   if (query.get('openid.mode') !== 'id_res') return { ok: false, error: 'malformed' }
-  if (query.get('openid.op_endpoint') !== OP_ENDPOINT) return { ok: false, error: 'malformed' }
-  if (query.get('openid.return_to') !== callbackUrl(STEAM_CALLBACK_PATH)) {
-    return { ok: false, error: 'malformed' }
+  if (!sessionNonce || query.get('openid.return_to') !== returnTo(sessionNonce)) {
+    return { ok: false, error: 'steam_session' }
   }
+  if (query.get('openid.op_endpoint') !== OP_ENDPOINT) return { ok: false, error: 'malformed' }
   const claimedId = query.get('openid.claimed_id') ?? ''
   const match = CLAIMED_ID.exec(claimedId)
   if (!match || query.get('openid.identity') !== claimedId) {

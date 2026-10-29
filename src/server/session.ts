@@ -5,6 +5,7 @@ import { config } from './config'
 export type Session = {
   redditUsername?: string
   redditState?: string
+  steamNonce?: string
   steamId64?: string
 }
 
@@ -47,10 +48,10 @@ export function writeSession(session: Session): void {
   })
 }
 
-export function consumeRedditState(): string | undefined {
-  const { redditState, ...session } = readSession()
-  writeSession(session)
-  return redditState
+export function consumeOnce(key: 'redditState' | 'steamNonce'): string | undefined {
+  const { [key]: value, ...session } = readSession()
+  if (value !== undefined) writeSession(session)
+  return value
 }
 
 export function clearSession(): void {

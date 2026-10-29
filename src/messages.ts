@@ -4,6 +4,7 @@ export const ERROR_MESSAGES: Record<string, string> = {
   reddit_state: 'Reddit login expired or was tampered with. Try again.',
   reddit_failed: 'Reddit did not confirm your identity. Try again.',
   reddit_unconfigured: 'Reddit login is not configured on this server.',
+  steam_session: 'That Steam sign-in expired or was started in another browser. Try again.',
   malformed: 'Steam login response was invalid.',
   rejected: 'Steam did not vouch for that login.',
   unreachable: 'Could not reach Steam to confirm your login. Try again.',

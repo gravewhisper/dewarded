@@ -109,7 +109,7 @@ Each command runs from the repository root.
 | `pnpm seed-claim <reddit-name> <steamId64>` | Creates or renames a backlink-mode claim through the same code as the claim form, with no login, and prints the claim |
 | `pnpm seed <reddit-name> <steamId64>` | Links a reddit-mode account through the same OpenDota check as the Steam callback, with no login, and prints the record |
 | `pnpm build && pnpm start` | Builds and runs the production server |
-| `BASE=<origin> scripts/verify-steam-forgery.sh <cookie-jar> <db>` | Sends five forged Steam callbacks to a running dev server and prints the database row counts before and after. `BASE` defaults to `http://localhost:3000`. In backlink mode, the jar can be `/dev/null`. In reddit mode, the jar must hold a session that logged in through Reddit. The script needs the `sqlite3` CLI. |
+| `BASE=<origin> scripts/verify-steam-forgery.sh <cookie-jar> <db>` | Sends seven forged Steam callbacks to a running dev server and prints the database row counts before and after. Each forgery starts its own Steam login first, so it carries a valid session nonce, except the two that test a missing or foreign nonce. `BASE` defaults to `http://localhost:3000`. In backlink mode, the jar can be `/dev/null`. In reddit mode, the jar must hold a session that logged in through Reddit. The script needs the `sqlite3` CLI. |
 
 ## Where the code lives
 

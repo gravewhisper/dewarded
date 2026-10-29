@@ -1,17 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { config } from '#/server/config'
 import { linkError, redirectTo } from '#/server/http'
-import { readSession } from '#/server/session'
-import { steamLoginUrl } from '#/server/steam'
+import { readSession, writeSession } from '#/server/session'
+import { newSteamNonce, steamLoginUrl } from '#/server/steam'
 
 export const Route = createFileRoute('/auth/steam/start')({
   server: {
     handlers: {
       GET: () => {
-        if (config.verifyMode === 'reddit' && !readSession().redditUsername) {
+        const session = readSession()
+        if (config.verifyMode === 'reddit' && !session.redditUsername) {
           return linkError('reddit_first')
         }
-        return redirectTo(steamLoginUrl())
+        const steamNonce = newSteamNonce()
+        writeSession({ ...session, steamNonce })
+        return redirectTo(steamLoginUrl(steamNonce))
       },
     },
   },
