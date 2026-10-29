@@ -143,7 +143,12 @@ export async function openDatabase(url: string, authToken: string | undefined, p
 let clientPromise: Promise<Client> | null = null
 
 export function getDb(): Promise<Client> {
-  clientPromise ??= openDatabase(config.databaseUrl, config.databaseAuthToken, config.steamIdPepper)
+  clientPromise ??= openDatabase(config.databaseUrl, config.databaseAuthToken, config.steamIdPepper).catch(
+    (error: unknown) => {
+      clientPromise = null
+      throw error
+    },
+  )
   return clientPromise
 }
 
