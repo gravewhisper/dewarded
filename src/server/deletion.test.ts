@@ -1,8 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, readFileSync } from 'node:fs'
+import { mkdtempSync, readdirSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import type { Medal, SteamCheck, SteamKey } from '#/domain'
 import type { Person } from './db.ts'
 
@@ -64,4 +64,22 @@ test('a deleted claim leaves none of its bytes in the database file', async () =
   assert.deepEqual(traces.filter((trace) => readFileSync(DB_PATH).includes(trace)), traces)
   assert.equal(await deleteIfConfirmed(form({ confirm: 'yes' }), async () => ({ steamKey })), 'deleted')
   assert.deepEqual(traces.filter((trace) => readFileSync(DB_PATH).includes(trace)), [])
+})
+
+const databaseFiles = () =>
+  readdirSync(dirname(DB_PATH))
+    .filter((file) => file.startsWith(basename(DB_PATH)))
+    .map((file) => readFileSync(join(dirname(DB_PATH), file)))
+
+test('in WAL mode, a deleted claim leaves none of its bytes in any file of the database', async () => {
+  const walMode = await (await db.getDb()).execute('PRAGMA journal_mode = WAL')
+  assert.equal(walMode.rows[0]?.journal_mode, 'wal')
+  const steamKey = '6'.repeat(64) as SteamKey
+  const medal: Medal = { kind: 'immortal', leaderboardRank: 8765 }
+  const id = await db.saveClaim({ ...check(steamKey), medal }, 'erase_me_from_wal')
+  const traces = ['erase_me_from_wal', id, JSON.stringify(medal), steamKey]
+  const tracesLeft = () => traces.filter((trace) => databaseFiles().some((bytes) => bytes.includes(trace)))
+  assert.deepEqual(tracesLeft(), traces)
+  assert.equal(await deleteIfConfirmed(form({ confirm: 'yes' }), async () => ({ steamKey })), 'deleted')
+  assert.deepEqual(tracesLeft(), [])
 })
