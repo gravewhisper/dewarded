@@ -1,18 +1,37 @@
-# medallion
+# Medallion
 
-A minimal TanStack Start app with one route and plain CSS.
+An opt-in site where a Reddit user links their Steam account and gets a public
+page at `/u/<reddit-name>` showing their Dota 2 medal as OpenDota reports it.
 
 ```bash
 pnpm install
+cp .env.example .env   # optional in dev
 pnpm dev
 ```
 
-Edit `src/routes/index.tsx` to get started. Add route files under
-`src/routes`; TanStack Router updates `src/routeTree.gen.ts` for you.
+Without `REDDIT_CLIENT_ID`, dev builds replace Reddit login with a clearly
+labelled fake form. Production builds compile that form out.
 
-Build the production app with:
+## Scripts
 
-```bash
-pnpm build
-```
+- `pnpm test` runs the domain tests (`node --test`).
+- `pnpm typecheck` runs `tsc`. The route tree types come from the Vite plugin,
+  so run `pnpm dev` or `pnpm build` once after adding a route.
+- `pnpm seed <reddit-name> <steamId64>` links an account through the same
+  OpenDota fetch and upsert the Steam callback uses, with no login.
+- `scripts/verify-steam-forgery.sh <cookie-jar> <db>` sends forged Steam
+  callbacks to a running dev server and prints the row count before and after.
 
+## Layout
+
+- `src/domain.ts` holds the types and pure functions (medal parsing, region
+  picking, labels). No framework imports.
+- `src/server/opendota.ts` is the only code that sees raw `rank_tier`.
+- `src/server/db.ts` is the only code that touches the database.
+- `src/server/steam.ts` and `src/server/reddit.ts` own the login protocols.
+- `src/routes/auth.*` and `src/routes/api.*` are server-only handlers.
+
+## OpenDota limits
+
+The free tier allows 60 calls a minute and 3000 a day per server IP. Each check
+costs two calls, so refresh is owner-only with a one-hour cooldown.
