@@ -131,7 +131,7 @@ Write the destination address only in Cloudflare. The repository, the site, and 
 
 Fly snapshots the volume once a day. For `dewarded_data`, `fly volumes show <volume-id>` reports scheduled snapshots on and a retention of 14 days. `fly volumes snapshots list <volume-id>` lists the snapshots, and `fly volumes create dewarded_data --snapshot-id <snapshot-id> --region <region>` makes a new volume from one.
 
-To keep a copy on your own machine, follow these steps.
+To keep a copy on your own machine, follow these steps. They save the copy in `~/dewarded-backups/`, outside the repository, because `fly deploy` uploads the repository folder to Fly's remote builder. `.dockerignore` also leaves `*.db` files out of that upload, but a copy outside the folder does not depend on it.
 
 1. Wake the machine, because `fly ssh` needs it running and Fly stops it when it is idle.
 
@@ -142,13 +142,14 @@ To keep a copy on your own machine, follow these steps.
 2. Copy the database file.
 
 	```bash
-	fly ssh sftp get /data/dewarded.db ./dewarded-backup.db -a dewarded
+	mkdir -p ~/dewarded-backups
+	fly ssh sftp get /data/dewarded.db ~/dewarded-backups/dewarded-backup.db -a dewarded
 	```
 
 3. Check that the copy is complete and readable.
 
 	```bash
-	sqlite3 ./dewarded-backup.db 'PRAGMA integrity_check; SELECT count(*) FROM claims;'
+	sqlite3 ~/dewarded-backups/dewarded-backup.db 'PRAGMA integrity_check; SELECT count(*) FROM claims;'
 	```
 
 	The output is `ok` and the number of claims. If the check fails, take the copy again.
@@ -164,7 +165,7 @@ Nobody has run these steps against dewarded.com yet. Try them on a scratch app b
 
 	```bash
 	curl -s -o /dev/null https://dewarded.com/
-	fly ssh sftp put ./dewarded-backup.db /data/restore.db -a dewarded
+	fly ssh sftp put ~/dewarded-backups/dewarded-backup.db /data/restore.db -a dewarded
 	```
 
 3. Replace the live file and restart the app.

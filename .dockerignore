@@ -4,3 +4,9 @@ data
 .env*
 .git
 .tanstack
+**/*.db
+**/*.db-*
+**/*.sqlite*
+decisions.tsv
+docs
+scripts
