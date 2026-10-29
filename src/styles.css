@@ -81,3 +81,19 @@ form {
   color: #6b6b70;
   font-style: italic;
 }
+
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  width: min(42rem, calc(100% - 2rem));
+  margin: 0 auto 2rem;
+  font-size: 0.85rem;
+  color: #6e6e73;
+}
+
+.notice {
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #8a5a00;
+  background: #fff;
+}

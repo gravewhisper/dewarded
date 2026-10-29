@@ -16,6 +16,10 @@ function LinkPage() {
     <main>
       <h1>Verify your medal</h1>
       {error && <p className="error">{error}</p>}
+      <p className="notice">
+        Linking makes your Reddit username, your Steam account and your medal public on your
+        Medallion page. You can delete it any time. <Link to="/privacy">What we store</Link>.
+      </p>
       <ol className="steps">
         <li>
           {redditUsername ? (

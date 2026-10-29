@@ -28,6 +28,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <Link to="/me">My link</Link>
         </header>
         {children}
+        <footer>
+          <Link to="/privacy">Privacy</Link>
+          <span>
+            Not affiliated with Valve. Dota 2 is a trademark of Valve Corporation. Rank data from{' '}
+            <a href="https://www.opendota.com">OpenDota</a>.
+          </span>
+        </footer>
         <Scripts />
       </body>
     </html>

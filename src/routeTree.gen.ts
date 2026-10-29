@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LinkRouteImport } from './routes/link'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ApiDeleteRouteImport } from './routes/api.delete'
 import { Route as ApiLogoutRouteImport } from './routes/api.logout'
 import { Route as ApiRefreshRouteImport } from './routes/api.refresh'
@@ -36,6 +37,11 @@ const LinkRoute = LinkRouteImport.update({
 const MeRoute = MeRouteImport.update({
   id: '/me',
   path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDeleteRoute = ApiDeleteRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/link': typeof LinkRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
   '/api/refresh': typeof ApiRefreshRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/link': typeof LinkRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
   '/api/refresh': typeof ApiRefreshRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/link': typeof LinkRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
   '/api/refresh': typeof ApiRefreshRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/link'
     | '/me'
+    | '/privacy'
     | '/api/delete'
     | '/api/logout'
     | '/api/refresh'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/'
     | '/link'
     | '/me'
+    | '/privacy'
     | '/api/delete'
     | '/api/logout'
     | '/api/refresh'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/'
     | '/link'
     | '/me'
+    | '/privacy'
     | '/api/delete'
     | '/api/logout'
     | '/api/refresh'
@@ -187,6 +199,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LinkRoute: typeof LinkRoute
   MeRoute: typeof MeRoute
+  PrivacyRoute: typeof PrivacyRoute
   ApiDeleteRoute: typeof ApiDeleteRoute
   ApiLogoutRoute: typeof ApiLogoutRoute
   ApiRefreshRoute: typeof ApiRefreshRoute
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/me'
       fullPath: '/me'
       preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/delete': {
@@ -299,6 +319,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LinkRoute: LinkRoute,
   MeRoute: MeRoute,
+  PrivacyRoute: PrivacyRoute,
   ApiDeleteRoute: ApiDeleteRoute,
   ApiLogoutRoute: ApiLogoutRoute,
   ApiRefreshRoute: ApiRefreshRoute,
