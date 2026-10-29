@@ -199,6 +199,7 @@ function inWriteTransaction<T>(work: (tx: Transaction) => Promise<T>): Promise<T
   const write = lastWrite.then(async () => {
     const tx = await (await getDb()).transaction('write')
     try {
+      await tx.execute('PRAGMA secure_delete = ON')
       const result = await work(tx)
       await tx.commit()
       return result
