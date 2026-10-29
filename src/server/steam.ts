@@ -64,6 +64,7 @@ export async function verifySteamCallback(
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body,
+      signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) return { ok: false, error: 'unreachable' }
     text = await res.text()
