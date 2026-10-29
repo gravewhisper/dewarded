@@ -32,17 +32,17 @@ import {
 import REGION_NAMES from './server/regions.json' with { type: 'json' }
 
 test('a Steam ID is exactly 17 digits', () => {
-  assert.equal(parseSteamId64('76561198065514372'), '76561198065514372')
-  for (const bad of ['', '7656119806551437', '765611980655143721', '7656119806551437a', ' 76561198065514372']) {
+  assert.equal(parseSteamId64('76561198000000123'), '76561198000000123')
+  for (const bad of ['', '7656119800000012', '765611980000001231', '7656119800000012a', ' 76561198000000123']) {
     assert.equal(parseSteamId64(bad), null, bad)
   }
 })
 
-const STEAM_KEY = '1ca540d4b0ce70323451fe02ee1d083b45bae538614a1d7bd3a609ed557ee3dc' as SteamKey
+const STEAM_KEY = '3138cb27a970b6176f705fc3f2553b77dd47da9971d8dad77a180ac91f4e70a0' as SteamKey
 const OTHER_STEAM_KEY = '9f1c2a6e0b7d4c3e8a5f6b1d2c3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e' as SteamKey
 
 test('steamId64 converts to the 32-bit account id', () => {
-  assert.equal(steamId64ToAccountId('76561198065514372' as SteamId64), 105248644)
+  assert.equal(steamId64ToAccountId('76561198000000123' as SteamId64), 39734395)
 })
 
 test('rank_tier 80 with leaderboard rank is a ranked Immortal', () => {
@@ -286,7 +286,7 @@ test('claim ids from different random bytes differ', () => {
 
 test('claim id parsing accepts only the slug format', () => {
   assert.equal(parseClaimId('k3x7q2mwab'), 'k3x7q2mwab')
-  for (const bad of ['', 'k3x9q2mwa', 'k3x7q2mwabc', 'K3X9Q2MWAB', 'k3x9q2mw01', '../etc/pw', '76561198065514372']) {
+  for (const bad of ['', 'k3x9q2mwa', 'k3x7q2mwabc', 'K3X9Q2MWAB', 'k3x9q2mw01', '../etc/pw', '76561198000000123']) {
     assert.equal(parseClaimId(bad), null, bad)
   }
 })

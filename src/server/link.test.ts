@@ -182,11 +182,11 @@ const askedOnlyAbout = (opendota: OpenDotaStub, accountId: string) =>
 test('refreshing a page asks OpenDota about the Steam account that is signed in', async (t) => {
   const opendota = stubOpenDota(t)
   const start = day(22)
-  const owner = await steam('76561198065514372')
+  const owner = await steam('76561198000000123')
   await claimAccount(owner, 'owner_name', { now: start })
   opendota.calls = []
   assert.equal((await refreshClaim(owner, { now: later(start, 2 * HOUR) })).ok, true)
-  assert.equal(askedOnlyAbout(opendota, '105248644'), true, opendota.calls.join(' '))
+  assert.equal(askedOnlyAbout(opendota, '39734395'), true, opendota.calls.join(' '))
 })
 
 test('signing in again with the same Steam account finds the same page', async (t) => {

@@ -6,8 +6,8 @@ import type { SteamId64 } from '#/domain'
 import { DEV_STEAM_ID_PEPPER, config, parseSteamIdPepper } from './config.ts'
 import { deriveSteamKey, provenSteam, signedInSteam, steamIdentity } from './steamKey.ts'
 
-const STEAM_ID = '76561198065514372' as SteamId64
-const NEXT_STEAM_ID = '76561198065514373' as SteamId64
+const STEAM_ID = '76561198000000123' as SteamId64
+const NEXT_STEAM_ID = '76561198000000124' as SteamId64
 const PEPPER = '0123456789abcdef'.repeat(4)
 
 type Hashes = { started: number; peakInFlight: number }
@@ -58,7 +58,7 @@ test('a different pepper gives a different key for the same Steam ID', async () 
 test('a key is scrypt N=2^15 r=8 p=1 over the Steam ID, salted with the pepper, so stored keys stay valid across releases', async () => {
   assert.equal(
     await deriveSteamKey(STEAM_ID, PEPPER),
-    '1ca540d4b0ce70323451fe02ee1d083b45bae538614a1d7bd3a609ed557ee3dc',
+    '3138cb27a970b6176f705fc3f2553b77dd47da9971d8dad77a180ac91f4e70a0',
   )
 })
 

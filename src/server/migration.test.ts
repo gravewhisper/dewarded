@@ -12,7 +12,7 @@ process.env.DATABASE_URL = `file:${SERVER_DB}`
 const { getDb, openDatabase } = await import('./db.ts')
 const { deriveSteamKey } = await import('./steamKey.ts')
 
-const STEAM_ID = '76561198065514372' as SteamId64
+const STEAM_ID = '76561198000000123' as SteamId64
 const OTHER_STEAM_ID = '76561198000000001' as SteamId64
 const PEPPER = 'ab'.repeat(32)
 const OTHER_PEPPER = 'cd'.repeat(32)
@@ -46,7 +46,7 @@ async function writeOldSchemaDb(path: string): Promise<void> {
       )`,
       {
         sql: 'INSERT INTO claims VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        args: ['k3x7q2mwab', STEAM_ID, 105248644, 'owner_name', IMMORTAL, EUROPE, 3000, 9200, 1000],
+        args: ['k3x7q2mwab', STEAM_ID, 39734395, 'owner_name', IMMORTAL, EUROPE, 3000, 9200, 1000],
       },
       {
         sql: 'INSERT INTO claims VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -54,7 +54,7 @@ async function writeOldSchemaDb(path: string): Promise<void> {
       },
       {
         sql: 'INSERT INTO verifications VALUES (?, ?, ?, ?, ?, ?, ?)',
-        args: ['reddit_owner', STEAM_ID, 105248644, IMMORTAL, EUROPE, 5000, 9300],
+        args: ['reddit_owner', STEAM_ID, 39734395, IMMORTAL, EUROPE, 5000, 9300],
       },
     ],
     'write',
