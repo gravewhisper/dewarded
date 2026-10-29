@@ -1,4 +1,5 @@
-import { createCsrfMiddleware, createStart } from '@tanstack/react-start'
+import { createCsrfMiddleware, createMiddleware, createStart } from '@tanstack/react-start'
+import { applySecurityHeaders } from '#/server/securityHeaders'
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
 
@@ -9,6 +10,12 @@ const csrf = createCsrfMiddleware({
     origin === process.env.PUBLIC_URL?.replace(/\/$/, ''),
 })
 
+const securityHeaders = createMiddleware().server(async ({ next }) => {
+  const result = await next()
+  applySecurityHeaders(result.response.headers)
+  return result
+})
+
 export const startInstance = createStart(() => ({
-  requestMiddleware: [csrf],
+  requestMiddleware: [securityHeaders, csrf],
 }))
