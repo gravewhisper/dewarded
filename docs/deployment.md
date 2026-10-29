@@ -129,7 +129,7 @@ Write the destination address only in Cloudflare. The repository, the site, and 
 
 ## Back up the database
 
-Fly snapshots the volume once a day. For `dewarded_data`, `fly volumes show <volume-id>` reports scheduled snapshots on and a retention of 5 days. `fly volumes snapshots list <volume-id>` lists the snapshots, and `fly volumes create dewarded_data --snapshot-id <snapshot-id> --region <region>` makes a new volume from one.
+Fly snapshots the volume once a day. For `dewarded_data`, `fly volumes show <volume-id>` reports scheduled snapshots on and a retention of 14 days. `fly volumes snapshots list <volume-id>` lists the snapshots, and `fly volumes create dewarded_data --snapshot-id <snapshot-id> --region <region>` makes a new volume from one.
 
 To keep a copy on your own machine, follow these steps.
 

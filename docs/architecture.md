@@ -36,7 +36,7 @@ The hash protects a copy of the database that leaks without the pepper. It does 
 - **Server memory.** A Steam ID stays in memory for up to ten minutes after its hash is worked out.
 - **OpenDota.** Each check that calls OpenDota sends it the Dota account ID, because that is how OpenDota looks up a player.
 - **Cloudflare.** Cloudflare hosts the DNS, but the apex is not behind its proxy, so TLS ends at Fly and Cloudflare never sees the Steam callback or the session cookie. Only `www.dewarded.com` is proxied, and it only redirects to the apex, so it never carries a session or a sign-in. Turning the proxy on for the apex would let Cloudflare decrypt every request, Steam ID included.
-- **Snapshots and copies.** Fly keeps daily snapshots of the volume for 5 days. A row deleted on the site stays in older snapshots and backups until they expire or are deleted.
+- **Snapshots and copies.** Fly keeps daily snapshots of the volume for 14 days. A row deleted on the site stays in older snapshots and backups until they expire or are deleted.
 
 ## Sessions are signed cookies, and every sign-in carries a one-time nonce
 
