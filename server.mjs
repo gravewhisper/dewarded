@@ -17,6 +17,15 @@ const securityHeaders = async (_request, next) => {
   return response
 }
 
+const internalError = async (_request, next) => {
+  try {
+    return await next()
+  } catch (error) {
+    console.error(error)
+    return new Response('Internal Server Error', { status: 500, headers: { 'Cache-Control': 'no-store' } })
+  }
+}
+
 const STATIC_CACHE_CONTROL = [
   ['/assets/', 'public, max-age=31536000, immutable'],
   ['/', 'public, max-age=604800'],
@@ -45,10 +54,7 @@ serve({
   middleware: [
     log,
     securityHeaders,
+    internalError,
     cachedStatic,
   ],
-  error: (error) => {
-    console.error(error)
-    return new Response('Internal Server Error', { status: 500 })
-  },
 })
