@@ -64,8 +64,8 @@ Valve does not publish numeric MMR, so no outside site can verify an MMR number.
 This list covers the main points. The site's `/privacy` page has the full list.
 
 - Dewarded stores nothing until you sign in through Steam and enter a Reddit username. In reddit mode, it stores nothing until you finish both the Reddit login and the Steam login.
-- The database never contains a Steam ID or a Dota account ID. Dewarded stores a one-way, keyed hash of the Steam ID instead, made with scrypt (N=2^15, r=8, p=1) and salted with `STEAM_ID_PEPPER`. The hash recognises a Steam account that signs in again.
-- The Steam ID stays in the signed login cookie, in your own browser, while you are signed in. The server reads it from that cookie only in memory, to work out the hash and to fetch the medal from OpenDota, so refreshing a medal needs a Steam sign-in.
+- The live database holds no Steam ID or Dota account ID. Backups taken before Dewarded switched to the hash may hold them, and they are deleted after the switch. Nothing else stores them. Dewarded stores a one-way, keyed hash of the Steam ID instead, made with scrypt (N=2^15, r=8, p=1) and salted with `STEAM_ID_PEPPER`. The hash recognises a Steam account that signs in again.
+- The Steam ID stays in the signed login cookie, in your own browser, while you are signed in. The server reads it from that cookie only in memory, to work out the hash and to fetch the medal from OpenDota, so refreshing a medal needs a Steam sign-in. The server forgets it within ten minutes of working out its hash.
 - No page shows the Steam ID or the Dota account ID, not even `/me` to the signed-in owner. No server function or loader returns either one, or the hash, to the browser. `/me` shows only that you are signed in through Steam. A public page receives only the medal and leaderboard rank, the region, the check date, the Reddit name, and the optional self-reported MMR.
 - In backlink mode, Dewarded never connects to your Reddit account. In reddit mode, Dewarded uses the Reddit token once to read your username and does not keep the token.
 - One button deletes everything. **Delete all my data and log out** on `/me` removes your record and your public page, then logs you out.
@@ -93,7 +93,7 @@ To try reddit mode, set `VERIFY_MODE=reddit` in `.env`. If `REDDIT_CLIENT_ID` is
 | `VERIFY_MODE` | `backlink` or `reddit`. Any other value throws an error when the config loads. | `backlink` |
 | `PUBLIC_URL` | The origin the site is served from, with no trailing slash. Dewarded builds the Steam OpenID and Reddit OAuth callback URLs, the page link, and the link-preview image URL from it. Required in production. | `http://localhost:3000` |
 | `SESSION_SECRET` | 32 or more random bytes, such as the output of `openssl rand -hex 32`. It signs the session cookie. Required in production. | A new random secret on each start, so sessions end on restart |
-| `STEAM_ID_PEPPER` | 32 or more hex characters, such as the output of `openssl rand -hex 32`. It salts the hash that Dewarded stores in place of each Steam ID. Required in production. Changing or losing it disconnects every page from its owner, because the database holds no Steam IDs to hash again. | 64 zeros, so dev pages keep their owners across restarts |
+| `STEAM_ID_PEPPER` | 32 or more hex characters, such as the output of `openssl rand -hex 32`. It salts the hash that Dewarded stores in place of each Steam ID. Required in production, where the development pepper of 64 zeros is refused. Upper-case hex reads as lower case. Losing it disconnects every page from its owner, because the database holds no Steam IDs to hash again. The database keeps a check value made from its pepper, so a server started with a different pepper refuses to start. | 64 zeros, so dev pages keep their owners across restarts |
 | `DATABASE_URL` | A libSQL URL. It is either a local SQLite file, such as `file:./data/dewarded.db`, or `libsql://<db>.turso.io` for Turso. | `file:./data/dewarded.db` |
 | `DATABASE_AUTH_TOKEN` | The auth token for Turso. Only a remote libSQL database needs it. | None |
 | `REDDIT_CLIENT_ID` | The client ID of the Reddit app. Reddit mode only. | None |
@@ -145,7 +145,7 @@ fly secrets set STEAM_ID_PEPPER=<pepper>
 fly deploy
 ```
 
-A database written by an older version of Dewarded stores raw Steam IDs. The first time the new version opens it, Dewarded replaces each Steam ID with its hash in one transaction and then runs `VACUUM`, so the file keeps no copy of the old IDs. Set `STEAM_ID_PEPPER` before that deploy. Without it, a production server refuses to start.
+A database written by an older version of Dewarded stores raw Steam IDs. The first time the new version opens it, Dewarded replaces each Steam ID with its hash in one transaction and then runs `VACUUM`, so the file keeps no copy of the old IDs. Set `STEAM_ID_PEPPER` before that deploy. Without it, a production server refuses to start. Once the new version runs, delete every backup taken before the deploy, because those backups still hold the old IDs. Sessions from before this version hold no hash and read as signed out, so everyone signs in through Steam once more.
 
 To deploy in reddit mode, also set `VERIFY_MODE=reddit`, `REDDIT_CLIENT_ID`, and `REDDIT_CLIENT_SECRET`. Set the Reddit app's redirect URI to `<PUBLIC_URL>/auth/reddit/callback`.
 
