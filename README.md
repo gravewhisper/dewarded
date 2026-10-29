@@ -104,7 +104,7 @@ Each command runs from the repository root.
 
 | Script | What it does |
 | --- | --- |
-| `pnpm test` | Runs every `src/**/*.test.ts` file with `node --test` |
+| `pnpm test` | Runs every `src/**/*.test.ts` file with `node --test`, loading TypeScript through `tsx` |
 | `pnpm typecheck` | Runs `tsc --noEmit`. A new route fails the check until `pnpm dev` or `pnpm build` regenerates the route tree types in `src/routeTree.gen.ts`. |
 | `pnpm seed-claim <reddit-name> <steamId64>` | Creates or renames a backlink-mode claim through the same code as the claim form, with no login, and prints the claim |
 | `pnpm seed <reddit-name> <steamId64>` | Links a reddit-mode account through the same OpenDota check as the Steam callback, with no login, and prints the record |
