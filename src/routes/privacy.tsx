@@ -20,8 +20,26 @@ type ModeCopy = {
   corrections: React.ReactNode
 }
 
+const STEAM_KEY_STORED = (
+  <li>
+    A one-way, keyed hash of your Steam ID, not the ID itself. Dewarded uses it to recognise your
+    Steam account when you sign in again. Your public page does not show it or link to your Steam
+    or OpenDota profile.
+  </li>
+)
+
+const STEAM_ID_NOT_STORED = (
+  <li>
+    Your Steam ID and Dota account ID. Steam sends your Steam ID to Dewarded when you sign in, and
+    your login cookie keeps it while you stay signed in. Dewarded uses it only in memory, to work
+    out the hash and to fetch your medal from OpenDota. Your Dota account ID is a shorter form of
+    your Steam ID that OpenDota uses. The database contains neither, which is why refreshing your
+    medal needs you signed in through Steam.
+  </li>
+)
+
 const BACKLINK: ModeCopy = {
-  cookieContents: 'your Steam ID',
+  cookieContents: 'your Steam ID and its hash',
   signIn: <li>Steam handles the sign-in.</li>,
   publicPagePath: (
     <>
@@ -39,7 +57,7 @@ const BACKLINK: ModeCopy = {
 }
 
 const REDDIT: ModeCopy = {
-  cookieContents: 'your Reddit username',
+  cookieContents: 'your Reddit username and, once you link Steam, your Steam ID and its hash',
   signIn: <li>Reddit and Steam handle the logins.</li>,
   publicPagePath: (
     <>
@@ -103,9 +121,9 @@ function SharedSections({ copy }: { copy: ModeCopy }) {
       <h2>Your rights</h2>
       <ul>
         <li>
-          See what is stored about you. <Link to="/me">My link</Link> shows your Steam ID and links
-          to your public page, which shows the rest. Your Dota account ID is a shorter form of your
-          Steam ID.
+          See what is stored about you. Your public page shows your medal, region, check date,
+          Reddit name and MMR. While you're signed in through Steam, <Link to="/me">My link</Link>{' '}
+          also shows your Steam ID, read from your login cookie and not from the database.
         </li>
         {copy.corrections}
         <li>
@@ -158,16 +176,11 @@ function BacklinkPrivacy() {
       </ul>
 
       <h2>Stored but never shown</h2>
-      <ul>
-        <li>
-          Your Steam ID and Dota account ID. Dewarded needs them to check your medal again and to
-          know the page is yours. Your public page does not show them or link to your Steam or
-          OpenDota profile. Only you see your Steam ID, on <Link to="/me">My link</Link>.
-        </li>
-      </ul>
+      <ul>{STEAM_KEY_STORED}</ul>
 
       <h2>Not stored</h2>
       <ul>
+        {STEAM_ID_NOT_STORED}
         <li>Your Steam password. Dewarded never sees it.</li>
         <li>
           Anything from Reddit. Dewarded does not connect to your Reddit account or read your
@@ -205,16 +218,11 @@ function RedditPrivacy() {
       </ul>
 
       <h2>Stored but never shown</h2>
-      <ul>
-        <li>
-          Your Steam ID and Dota account ID. Dewarded needs them to check your medal again. Your
-          public page does not show them or link to your Steam or OpenDota profile. Only you see
-          your Steam ID, on <Link to="/me">My link</Link>.
-        </li>
-      </ul>
+      <ul>{STEAM_KEY_STORED}</ul>
 
       <h2>Not stored</h2>
       <ul>
+        {STEAM_ID_NOT_STORED}
         <li>Your Reddit or Steam password. Dewarded never sees them.</li>
         <li>
           Reddit access tokens. Dewarded asks Reddit only for your username, uses the token once,

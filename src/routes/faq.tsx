@@ -109,7 +109,7 @@ const QUESTIONS: Question[] = [
       <>
         <p>
           Every page shows the date the medal was last checked. The page owner can press "Refresh
-          medal" on their own page once an hour while signed in.
+          medal" on their own page once an hour while signed in through Steam.
         </p>
         <p>
           Dewarded asks OpenDota to re-fetch the account first, but OpenDota can take a minute to
@@ -124,9 +124,15 @@ const QUESTIONS: Question[] = [
     answer: (
       <>
         <p>
-          Dewarded stores your Steam ID and Dota account ID, which it never shows. It also stores
-          the Reddit username you typed, your medal, your region, the date it was checked, and your
-          MMR if you entered one.
+          Dewarded stores a one-way, keyed hash of your Steam ID, not the ID itself, and uses it to
+          recognise your Steam account when you sign in again. Your Steam ID is used only in memory
+          while you're signed in, to fetch your medal, and the database never contains it. The
+          server still sees your Steam ID when you sign in, and refreshing your medal needs you
+          signed in through Steam.
+        </p>
+        <p>
+          Dewarded also stores the Reddit username you typed, your medal, your region, the date it
+          was checked, and your MMR if you entered one.
         </p>
         <p>
           "Delete my data" on <Link to="/me">My link</Link> removes all of it and your page.{' '}
