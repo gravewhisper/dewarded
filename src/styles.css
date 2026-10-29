@@ -1,5 +1,3 @@
-
-
 * {
   box-sizing: border-box;
 }
@@ -7,10 +5,79 @@
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  color: #1d1d1f;
+  background: #fafafa;
+}
+
+header {
+  display: flex;
+  gap: 1.5rem;
+  align-items: baseline;
+  width: min(42rem, calc(100% - 2rem));
+  margin: 1.5rem auto 0;
+}
+
+.brand {
+  font-weight: 700;
+  margin-right: auto;
 }
 
 main {
   width: min(42rem, calc(100% - 2rem));
-  margin: 4rem auto;
+  margin: 3rem auto;
 }
 
+a {
+  color: #8a5a00;
+}
+
+.medal {
+  font-size: 3rem;
+  margin: 0.25rem 0;
+}
+
+.muted {
+  color: #6b6b70;
+}
+
+.button,
+button {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border: 1px solid #8a5a00;
+  border-radius: 6px;
+  background: #fff;
+  color: #8a5a00;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.danger {
+  border-color: #b00020;
+  color: #b00020;
+}
+
+form {
+  margin: 1rem 0;
+}
+
+.steps li {
+  margin: 1rem 0;
+}
+
+.error {
+  color: #b00020;
+}
+
+.notice,
+.dev {
+  color: #6b6b70;
+  font-style: italic;
+}

@@ -10,11 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LinkRouteImport } from './routes/link'
+import { Route as MeRouteImport } from './routes/me'
 import { Route as ApiDeleteRouteImport } from './routes/api.delete'
 import { Route as ApiLogoutRouteImport } from './routes/api.logout'
 import { Route as ApiRefreshRouteImport } from './routes/api.refresh'
 import { Route as ApiUnlinkRouteImport } from './routes/api.unlink'
 import { Route as AuthDevLoginRouteImport } from './routes/auth.dev-login'
+import { Route as URedditUsernameRouteImport } from './routes/u.$redditUsername'
 import { Route as AuthRedditCallbackRouteImport } from './routes/auth.reddit.callback'
 import { Route as AuthRedditStartRouteImport } from './routes/auth.reddit.start'
 import { Route as AuthSteamCallbackRouteImport } from './routes/auth.steam.callback'
@@ -23,6 +26,16 @@ import { Route as AuthSteamStartRouteImport } from './routes/auth.steam.start'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinkRoute = LinkRouteImport.update({
+  id: '/link',
+  path: '/link',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeRoute = MeRouteImport.update({
+  id: '/me',
+  path: '/me',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDeleteRoute = ApiDeleteRouteImport.update({
@@ -50,6 +63,11 @@ const AuthDevLoginRoute = AuthDevLoginRouteImport.update({
   path: '/auth/dev-login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const URedditUsernameRoute = URedditUsernameRouteImport.update({
+  id: '/u/$redditUsername',
+  path: '/u/$redditUsername',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRedditCallbackRoute = AuthRedditCallbackRouteImport.update({
   id: '/auth/reddit/callback',
   path: '/auth/reddit/callback',
@@ -73,11 +91,14 @@ const AuthSteamStartRoute = AuthSteamStartRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/link': typeof LinkRoute
+  '/me': typeof MeRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
   '/api/refresh': typeof ApiRefreshRoute
   '/api/unlink': typeof ApiUnlinkRoute
   '/auth/dev-login': typeof AuthDevLoginRoute
+  '/u/$redditUsername': typeof URedditUsernameRoute
   '/auth/reddit/callback': typeof AuthRedditCallbackRoute
   '/auth/reddit/start': typeof AuthRedditStartRoute
   '/auth/steam/callback': typeof AuthSteamCallbackRoute
@@ -85,11 +106,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/link': typeof LinkRoute
+  '/me': typeof MeRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
   '/api/refresh': typeof ApiRefreshRoute
   '/api/unlink': typeof ApiUnlinkRoute
   '/auth/dev-login': typeof AuthDevLoginRoute
+  '/u/$redditUsername': typeof URedditUsernameRoute
   '/auth/reddit/callback': typeof AuthRedditCallbackRoute
   '/auth/reddit/start': typeof AuthRedditStartRoute
   '/auth/steam/callback': typeof AuthSteamCallbackRoute
@@ -98,11 +122,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/link': typeof LinkRoute
+  '/me': typeof MeRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
   '/api/refresh': typeof ApiRefreshRoute
   '/api/unlink': typeof ApiUnlinkRoute
   '/auth/dev-login': typeof AuthDevLoginRoute
+  '/u/$redditUsername': typeof URedditUsernameRoute
   '/auth/reddit/callback': typeof AuthRedditCallbackRoute
   '/auth/reddit/start': typeof AuthRedditStartRoute
   '/auth/steam/callback': typeof AuthSteamCallbackRoute
@@ -112,11 +139,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/link'
+    | '/me'
     | '/api/delete'
     | '/api/logout'
     | '/api/refresh'
     | '/api/unlink'
     | '/auth/dev-login'
+    | '/u/$redditUsername'
     | '/auth/reddit/callback'
     | '/auth/reddit/start'
     | '/auth/steam/callback'
@@ -124,11 +154,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/link'
+    | '/me'
     | '/api/delete'
     | '/api/logout'
     | '/api/refresh'
     | '/api/unlink'
     | '/auth/dev-login'
+    | '/u/$redditUsername'
     | '/auth/reddit/callback'
     | '/auth/reddit/start'
     | '/auth/steam/callback'
@@ -136,11 +169,14 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/link'
+    | '/me'
     | '/api/delete'
     | '/api/logout'
     | '/api/refresh'
     | '/api/unlink'
     | '/auth/dev-login'
+    | '/u/$redditUsername'
     | '/auth/reddit/callback'
     | '/auth/reddit/start'
     | '/auth/steam/callback'
@@ -149,11 +185,14 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LinkRoute: typeof LinkRoute
+  MeRoute: typeof MeRoute
   ApiDeleteRoute: typeof ApiDeleteRoute
   ApiLogoutRoute: typeof ApiLogoutRoute
   ApiRefreshRoute: typeof ApiRefreshRoute
   ApiUnlinkRoute: typeof ApiUnlinkRoute
   AuthDevLoginRoute: typeof AuthDevLoginRoute
+  URedditUsernameRoute: typeof URedditUsernameRoute
   AuthRedditCallbackRoute: typeof AuthRedditCallbackRoute
   AuthRedditStartRoute: typeof AuthRedditStartRoute
   AuthSteamCallbackRoute: typeof AuthSteamCallbackRoute
@@ -167,6 +206,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/link': {
+      id: '/link'
+      path: '/link'
+      fullPath: '/link'
+      preLoaderRoute: typeof LinkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/delete': {
@@ -204,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDevLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$redditUsername': {
+      id: '/u/$redditUsername'
+      path: '/u/$redditUsername'
+      fullPath: '/u/$redditUsername'
+      preLoaderRoute: typeof URedditUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/reddit/callback': {
       id: '/auth/reddit/callback'
       path: '/auth/reddit/callback'
@@ -237,11 +297,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LinkRoute: LinkRoute,
+  MeRoute: MeRoute,
   ApiDeleteRoute: ApiDeleteRoute,
   ApiLogoutRoute: ApiLogoutRoute,
   ApiRefreshRoute: ApiRefreshRoute,
   ApiUnlinkRoute: ApiUnlinkRoute,
   AuthDevLoginRoute: AuthDevLoginRoute,
+  URedditUsernameRoute: URedditUsernameRoute,
   AuthRedditCallbackRoute: AuthRedditCallbackRoute,
   AuthRedditStartRoute: AuthRedditStartRoute,
   AuthSteamCallbackRoute: AuthSteamCallbackRoute,
