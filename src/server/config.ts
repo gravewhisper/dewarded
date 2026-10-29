@@ -25,7 +25,11 @@ export function parseSteamIdPepper(raw: string | undefined, production: boolean)
     return DEV_STEAM_ID_PEPPER
   }
   if (!STEAM_ID_PEPPER.test(raw)) throw new Error('STEAM_ID_PEPPER must be at least 32 hex characters')
-  return raw
+  const pepper = raw.toLowerCase()
+  if (production && pepper === DEV_STEAM_ID_PEPPER) {
+    throw new Error('STEAM_ID_PEPPER must not be the public development pepper in production')
+  }
+  return pepper
 }
 
 export const config = {
