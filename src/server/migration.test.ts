@@ -14,6 +14,7 @@ const { deriveSteamKey } = await import('./steamKey.ts')
 const STEAM_ID = '76561198065514372' as SteamId64
 const OTHER_STEAM_ID = '76561198000000001' as SteamId64
 const PEPPER = 'ab'.repeat(32)
+const OTHER_PEPPER = 'cd'.repeat(32)
 const IMMORTAL = JSON.stringify({ kind: 'immortal', leaderboardRank: 16 })
 const LEGEND = JSON.stringify({ kind: 'ranked', tier: 5, stars: 3 })
 const EUROPE = JSON.stringify({ name: 'Europe', games: 40, share: 1 })
@@ -58,6 +59,53 @@ async function writeOldSchemaDb(path: string): Promise<void> {
     'write',
   )
   client.close()
+}
+
+async function writeKeyedSchemaDb(path: string): Promise<void> {
+  const client = createClient({ url: `file:${path}` })
+  await client.batch(
+    [
+      `CREATE TABLE verifications (
+        reddit_username TEXT PRIMARY KEY,
+        steam_key TEXT NOT NULL,
+        medal TEXT NOT NULL,
+        region TEXT,
+        checked_at INTEGER NOT NULL,
+        self_reported_mmr INTEGER,
+        region_checked_at INTEGER NOT NULL
+      )`,
+      `CREATE TABLE claims (
+        id TEXT PRIMARY KEY,
+        steam_key TEXT UNIQUE NOT NULL,
+        claimed_reddit_username TEXT NOT NULL,
+        medal TEXT NOT NULL,
+        region TEXT,
+        checked_at INTEGER NOT NULL,
+        self_reported_mmr INTEGER,
+        region_checked_at INTEGER NOT NULL
+      )`,
+      {
+        sql: 'INSERT INTO claims VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        args: ['k3x7q2mwab', await deriveSteamKey(STEAM_ID, PEPPER), 'owner_name', IMMORTAL, EUROPE, 3000, 9200, 1000],
+      },
+    ],
+    'write',
+  )
+  client.close()
+}
+
+async function ownerClaimId(client: Client): Promise<unknown> {
+  const { rows } = await client.execute({
+    sql: 'SELECT id FROM claims WHERE steam_key = ?',
+    args: [await deriveSteamKey(STEAM_ID, PEPPER)],
+  })
+  return rows[0]?.id
+}
+
+function refusesOtherPepper(error: Error): boolean {
+  assert.match(error.message, /STEAM_ID_PEPPER/)
+  assert.equal(error.message.includes(PEPPER) || error.message.includes(OTHER_PEPPER), false)
+  return true
 }
 
 async function columns(client: Client, table: string): Promise<unknown[]> {
@@ -174,4 +222,29 @@ test('opening an already migrated database leaves the file byte for byte unchang
   ;(await openDatabase(`file:${path}`, undefined, PEPPER)).close()
   assert.deepEqual(readFileSync(path), once)
   assert.deepEqual(readdirSync(dir).filter((file) => file.startsWith('twice.db')), ['twice.db'])
+})
+
+test('a database refuses to open with a pepper other than the one it was keyed with, and still opens with its own', async () => {
+  const path = join(dir, 'pepper.db')
+  await writeOldSchemaDb(path)
+  ;(await openDatabase(`file:${path}`, undefined, PEPPER)).close()
+  const keyed = readFileSync(path)
+  await assert.rejects(openDatabase(`file:${path}`, undefined, OTHER_PEPPER), refusesOtherPepper)
+  assert.deepEqual(readFileSync(path), keyed)
+  const client = await openDatabase(`file:${path}`, undefined, PEPPER)
+  assert.equal(await ownerClaimId(client), 'k3x7q2mwab')
+  client.close()
+})
+
+test('a database keyed before it remembered its pepper takes the pepper it next opens with, once', async () => {
+  const path = join(dir, 'unremembered.db')
+  await writeKeyedSchemaDb(path)
+  ;(await openDatabase(`file:${path}`, undefined, PEPPER)).close()
+  const remembered = readFileSync(path)
+  ;(await openDatabase(`file:${path}`, undefined, PEPPER)).close()
+  assert.deepEqual(readFileSync(path), remembered)
+  await assert.rejects(openDatabase(`file:${path}`, undefined, OTHER_PEPPER), refusesOtherPepper)
+  const client = await openDatabase(`file:${path}`, undefined, PEPPER)
+  assert.equal(await ownerClaimId(client), 'k3x7q2mwab')
+  client.close()
 })
