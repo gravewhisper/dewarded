@@ -215,6 +215,21 @@ test('after opening, no byte of the database file holds a Steam ID', async () =>
   }
 })
 
+test('in WAL mode, no file of the database holds a Steam ID once opening returns, while the server keeps it open', async () => {
+  const path = join(dir, 'wal.db')
+  await writeOldSchemaDb(path)
+  const walMode = createClient({ url: `file:${path}` })
+  await walMode.execute('PRAGMA journal_mode = WAL')
+  walMode.close()
+  const client = await openDatabase(`file:${path}`, undefined, PEPPER)
+  assert.equal((await client.execute('PRAGMA journal_mode')).rows[0]?.journal_mode, 'wal')
+  const holdingSteamIds = readdirSync(dir).filter(
+    (file) => file.startsWith('wal.db') && readFileSync(join(dir, file)).includes('7656119'),
+  )
+  assert.deepEqual(holdingSteamIds, [])
+  client.close()
+})
+
 test('opening an already migrated database leaves the file byte for byte unchanged', async () => {
   const path = join(dir, 'twice.db')
   await writeOldSchemaDb(path)
