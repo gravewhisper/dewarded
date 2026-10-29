@@ -1,8 +1,8 @@
 import type { ClaimId } from '#/domain'
 import { getClaimBySteamId, getVerification, renameClaim, saveClaim, saveVerification } from './db'
-import { checkSteamAccount, type CheckError, type CheckOptions } from './opendota'
+import { checkSteamAccount, MEDAL_REUSE_MS, type CheckError, type CheckOptions } from './opendota'
 
-export const REFRESH_COOLDOWN_MS = 60 * 60 * 1000
+export const REFRESH_COOLDOWN_MS = MEDAL_REUSE_MS
 
 export type LinkError = CheckError | 'cooldown' | 'not_linked'
 
