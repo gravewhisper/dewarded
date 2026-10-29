@@ -89,6 +89,28 @@ export function medalLabel(medal: Medal): string {
   }
 }
 
+export type MedalArt = { icon: string; star: string | null; boardRank: number | null }
+
+const medalImage = (name: string) => `/medals/${name}.png`
+
+export function medalArt(medal: Medal): MedalArt {
+  switch (medal.kind) {
+    case 'uncalibrated':
+      return { icon: medalImage('rank_icon_0'), star: null, boardRank: null }
+    case 'ranked':
+      return {
+        icon: medalImage(`rank_icon_${medal.tier}`),
+        star: medalImage(`rank_star_${medal.stars}`),
+        boardRank: null,
+      }
+    case 'immortal': {
+      const rank = medal.leaderboardRank
+      const variant = rank === null ? '8' : rank <= 10 ? '8c' : rank <= 100 ? '8b' : '8'
+      return { icon: medalImage(`rank_icon_${variant}`), star: null, boardRank: rank }
+    }
+  }
+}
+
 export function regionLabel(region: Region): string {
   const name = region.name
     .split(' ')

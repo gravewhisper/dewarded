@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  medalArt,
   medalLabel,
   parseMedal,
   pickRegion,
@@ -60,4 +61,47 @@ test('region is the one with the most ranked games', () => {
 
 test('no ranked games means no region', () => {
   assert.equal(pickRegion({}, REGION_NAMES), null)
+})
+
+test('ranked medal art is the tier icon with its star overlay', () => {
+  assert.deepEqual(medalArt({ kind: 'ranked', tier: 6, stars: 3 }), {
+    icon: '/medals/rank_icon_6.png',
+    star: '/medals/rank_star_3.png',
+    boardRank: null,
+  })
+})
+
+test('uncalibrated medal art has no star', () => {
+  assert.deepEqual(medalArt({ kind: 'uncalibrated' }), {
+    icon: '/medals/rank_icon_0.png',
+    star: null,
+    boardRank: null,
+  })
+})
+
+test('immortal medal art picks the leaderboard variant and shows the rank', () => {
+  const art = (leaderboardRank: number | null) =>
+    medalArt({ kind: 'immortal', leaderboardRank })
+  assert.deepEqual(art(null), { icon: '/medals/rank_icon_8.png', star: null, boardRank: null })
+  assert.deepEqual(art(10), { icon: '/medals/rank_icon_8c.png', star: null, boardRank: 10 })
+  assert.deepEqual(art(11), { icon: '/medals/rank_icon_8b.png', star: null, boardRank: 11 })
+  assert.deepEqual(art(100), { icon: '/medals/rank_icon_8b.png', star: null, boardRank: 100 })
+  assert.deepEqual(art(101), { icon: '/medals/rank_icon_8.png', star: null, boardRank: 101 })
+})
+
+test('every medal art path points at a vendored image', async () => {
+  const { existsSync } = await import('node:fs')
+  const medals = [
+    { kind: 'uncalibrated' as const },
+    ...([1, 2, 3, 4, 5, 6, 7] as const).flatMap((tier) =>
+      ([1, 2, 3, 4, 5] as const).map((stars) => ({ kind: 'ranked' as const, tier, stars })),
+    ),
+    ...[null, 1, 50, 5000].map((leaderboardRank) => ({ kind: 'immortal' as const, leaderboardRank })),
+  ]
+  for (const medal of medals) {
+    const { icon, star } = medalArt(medal)
+    for (const path of [icon, star]) {
+      if (path) assert.ok(existsSync(new URL(`../public${path}`, import.meta.url)), path)
+    }
+  }
 })
