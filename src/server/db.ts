@@ -100,15 +100,21 @@ async function readVerification(
   return rows[0] ? toVerification(rows[0]) : null
 }
 
-async function inWriteTransaction<T>(work: (tx: Transaction) => Promise<T>): Promise<T> {
-  const tx = await (await getDb()).transaction('write')
-  try {
-    const result = await work(tx)
-    await tx.commit()
-    return result
-  } finally {
-    tx.close()
-  }
+let lastWrite: Promise<unknown> = Promise.resolve()
+
+function inWriteTransaction<T>(work: (tx: Transaction) => Promise<T>): Promise<T> {
+  const write = lastWrite.then(async () => {
+    const tx = await (await getDb()).transaction('write')
+    try {
+      const result = await work(tx)
+      await tx.commit()
+      return result
+    } finally {
+      tx.close()
+    }
+  })
+  lastWrite = write.catch(() => {})
+  return write
 }
 
 export async function getVerification(redditUsername: string): Promise<Verification | null> {
@@ -159,10 +165,12 @@ export function setSelfReportedMmr(
   })
 }
 
-export async function deleteVerification(redditUsername: string): Promise<void> {
-  await (await getDb()).execute({
-    sql: 'DELETE FROM verifications WHERE reddit_username = ?',
-    args: [redditUsername],
+export function deleteVerification(redditUsername: string): Promise<void> {
+  return inWriteTransaction(async (tx) => {
+    await tx.execute({
+      sql: 'DELETE FROM verifications WHERE reddit_username = ?',
+      args: [redditUsername],
+    })
   })
 }
 
@@ -226,12 +234,14 @@ export function saveClaim(check: SteamCheck, claimedRedditUsername: string): Pro
   })
 }
 
-export async function renameClaim(steamId64: string, claimedRedditUsername: string): Promise<boolean> {
-  const { rowsAffected } = await (await getDb()).execute({
-    sql: 'UPDATE claims SET claimed_reddit_username = ? WHERE steam_id64 = ?',
-    args: [claimedRedditUsername, steamId64],
+export function renameClaim(steamId64: string, claimedRedditUsername: string): Promise<boolean> {
+  return inWriteTransaction(async (tx) => {
+    const { rowsAffected } = await tx.execute({
+      sql: 'UPDATE claims SET claimed_reddit_username = ? WHERE steam_id64 = ?',
+      args: [claimedRedditUsername, steamId64],
+    })
+    return rowsAffected > 0
   })
-  return rowsAffected > 0
 }
 
 export function setClaimMmr(steamId64: string, mmr: number | null): Promise<MmrSaveResult> {

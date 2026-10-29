@@ -48,3 +48,10 @@ test('deleting by Reddit name removes the verification and any claim of its Stea
   await db.deletePersonData({ redditUsername: 'person_name' })
   assert.deepEqual(await remains(), NOTHING_OF_PERSON)
 })
+
+test('thirty claims saved at once are all stored', async () => {
+  const steamIds = Array.from({ length: 30 }, (_, i) => `765611980000010${String(i).padStart(2, '0')}`)
+  await Promise.all(steamIds.map((steamId64) => db.saveClaim(check(steamId64), 'burst_name')))
+  const stored = await Promise.all(steamIds.map((steamId64) => db.getClaimBySteamId(steamId64)))
+  assert.equal(stored.filter((claim) => claim !== null).length, 30)
+})
