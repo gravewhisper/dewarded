@@ -8,7 +8,7 @@ export type Medal =
 
 export type Region = { name: string; games: number; share: number }
 
-export type Verification = {
+export type MedalCheck = {
   redditUsername: string
   steamId64: string
   accountId: number
@@ -17,9 +17,11 @@ export type Verification = {
   checkedAt: Date
 }
 
+export type Verification = MedalCheck & { selfReportedMmr: number | null }
+
 export type PublicVerification = Pick<
   Verification,
-  'redditUsername' | 'medal' | 'region' | 'checkedAt'
+  'redditUsername' | 'medal' | 'region' | 'checkedAt' | 'selfReportedMmr'
 >
 
 export function publicVerification(v: Verification): PublicVerification {
@@ -28,7 +30,71 @@ export function publicVerification(v: Verification): PublicVerification {
     medal: v.medal,
     region: v.region,
     checkedAt: v.checkedAt,
+    selfReportedMmr: v.selfReportedMmr,
   }
+}
+
+export const MAX_MMR = 20000
+
+export function parseMmrInput(raw: string): { ok: true; mmr: number | null } | { ok: false } {
+  const text = raw.trim()
+  if (text === '') return { ok: true, mmr: null }
+  if (!/^\d+$/.test(text)) return { ok: false }
+  const mmr = Number(text)
+  return mmr <= MAX_MMR ? { ok: true, mmr } : { ok: false }
+}
+
+export function mmrAllowed(medal: Medal): boolean {
+  return medal.kind === 'immortal'
+}
+
+export function carriedMmr(
+  previous: Pick<Verification, 'steamId64' | 'selfReportedMmr'> | null,
+  next: MedalCheck,
+): number | null {
+  if (!previous || previous.steamId64 !== next.steamId64 || !mmrAllowed(next.medal)) return null
+  return previous.selfReportedMmr
+}
+
+const MMR_STAR_STARTS = [
+  0, 154, 308, 462, 616,
+  770, 924, 1078, 1232, 1386,
+  1540, 1694, 1848, 2002, 2156,
+  2310, 2464, 2618, 2772, 2926,
+  3080, 3234, 3388, 3542, 3696,
+  3850, 4004, 4158, 4312, 4466,
+  4620, 4820, 5020, 5220, 5420,
+  5620,
+] as const
+
+const IMMORTAL_MMR = MMR_STAR_STARTS[35]
+const IMMORTAL_TOLERANCE = IMMORTAL_MMR - MMR_STAR_STARTS[34]
+
+export type MmrRange = { from: number; to: number | null }
+
+export function estimatedMmrRange(medal: Medal): MmrRange | null {
+  switch (medal.kind) {
+    case 'uncalibrated':
+      return null
+    case 'immortal':
+      return { from: IMMORTAL_MMR, to: null }
+    case 'ranked': {
+      const star = (medal.tier - 1) * 5 + (medal.stars - 1)
+      return { from: MMR_STAR_STARTS[star], to: MMR_STAR_STARTS[star + 1] - 1 }
+    }
+  }
+}
+
+export function mmrFit(mmr: number): 'fits' | 'mismatch' {
+  return mmr >= IMMORTAL_MMR - IMMORTAL_TOLERANCE ? 'fits' : 'mismatch'
+}
+
+export function formatMmr(mmr: number): string {
+  return mmr.toLocaleString('en-US')
+}
+
+export function formatMmrRange({ from, to }: MmrRange): string {
+  return to === null ? `≈ ${formatMmr(from)}+` : `≈ ${formatMmr(from)}–${formatMmr(to)}`
 }
 
 export type RegionCounts = Record<string, { games: number }>

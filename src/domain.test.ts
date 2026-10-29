@@ -4,6 +4,13 @@ import {
   medalArt,
   medalLabel,
   medalTint,
+  carriedMmr,
+  estimatedMmrRange,
+  formatMmrRange,
+  mmrAllowed,
+  mmrFit,
+  parseMmrInput,
+  type MedalCheck,
   parseMedal,
   pickRegion,
   publicVerification,
@@ -130,8 +137,15 @@ test('public verification carries no Steam identifiers', () => {
     medal: { kind: 'immortal', leaderboardRank: 16 },
     region: null,
     checkedAt: new Date(0),
+    selfReportedMmr: 9000,
   })
-  assert.deepEqual(Object.keys(shown).sort(), ['checkedAt', 'medal', 'redditUsername', 'region'])
+  assert.deepEqual(Object.keys(shown).sort(), [
+    'checkedAt',
+    'medal',
+    'redditUsername',
+    'region',
+    'selfReportedMmr',
+  ])
   assert.doesNotMatch(JSON.stringify(shown), /76561198065514372|105248644/)
 })
 
@@ -148,4 +162,92 @@ test('each medal tier has its own card tint', () => {
 
 test('short region shows the name and share', () => {
   assert.equal(regionShare({ name: 'Europe', games: 91, share: 0.914 }), 'Europe, 91%')
+})
+
+const immortalCheck: MedalCheck = {
+  redditUsername: 'someone',
+  steamId64: '76561198065514372',
+  accountId: 105248644,
+  medal: { kind: 'immortal', leaderboardRank: 16 },
+  region: null,
+  checkedAt: new Date(0),
+}
+
+test('Immortal MMR fits from one Divine step below the Immortal estimate', () => {
+  assert.equal(mmrFit(9000), 'fits')
+  assert.equal(mmrFit(5420), 'fits')
+  assert.equal(mmrFit(5419), 'mismatch')
+  assert.equal(mmrFit(3000), 'mismatch')
+})
+
+test('each star estimates MMR from its start to just before the next star', () => {
+  assert.deepEqual(estimatedMmrRange({ kind: 'ranked', tier: 6, stars: 1 }), { from: 3850, to: 4003 })
+  assert.deepEqual(estimatedMmrRange({ kind: 'ranked', tier: 1, stars: 1 }), { from: 0, to: 153 })
+  assert.deepEqual(estimatedMmrRange({ kind: 'ranked', tier: 5, stars: 5 }), { from: 3696, to: 3849 })
+  assert.deepEqual(estimatedMmrRange({ kind: 'ranked', tier: 7, stars: 1 }), { from: 4620, to: 4819 })
+  assert.deepEqual(estimatedMmrRange({ kind: 'ranked', tier: 7, stars: 5 }), { from: 5420, to: 5619 })
+})
+
+test('Immortal estimate is open-ended and uncalibrated has none', () => {
+  assert.deepEqual(estimatedMmrRange({ kind: 'immortal', leaderboardRank: 16 }), { from: 5620, to: null })
+  assert.equal(estimatedMmrRange({ kind: 'uncalibrated' }), null)
+})
+
+test('MMR ranges read as approximate', () => {
+  assert.equal(formatMmrRange({ from: 4312, to: 4465 }), '≈ 4,312–4,465')
+  assert.equal(formatMmrRange({ from: 5620, to: null }), '≈ 5,620+')
+})
+
+test('a recheck of the same Steam account keeps the self-reported MMR', () => {
+  assert.equal(carriedMmr({ steamId64: immortalCheck.steamId64, selfReportedMmr: 9200 }, immortalCheck), 9200)
+})
+
+test('linking a different Steam account clears the self-reported MMR', () => {
+  assert.equal(carriedMmr({ steamId64: '76561198000000001', selfReportedMmr: 9200 }, immortalCheck), null)
+})
+
+test('a recheck that drops below Immortal clears the self-reported MMR', () => {
+  const legend: MedalCheck = { ...immortalCheck, medal: { kind: 'ranked', tier: 5, stars: 3 } }
+  assert.equal(carriedMmr({ steamId64: immortalCheck.steamId64, selfReportedMmr: 9200 }, legend), null)
+  assert.equal(carriedMmr({ steamId64: immortalCheck.steamId64, selfReportedMmr: 9200 }, { ...immortalCheck, medal: { kind: 'uncalibrated' } }), null)
+})
+
+test('a first link has no self-reported MMR', () => {
+  assert.equal(carriedMmr(null, immortalCheck), null)
+})
+
+test('only Immortal medals can carry a self-reported MMR', () => {
+  assert.equal(mmrAllowed({ kind: 'immortal', leaderboardRank: null }), true)
+  assert.equal(mmrAllowed({ kind: 'ranked', tier: 7, stars: 5 }), false)
+  assert.equal(mmrAllowed({ kind: 'uncalibrated' }), false)
+})
+
+test('MMR input accepts whole numbers from 0 to 20000', () => {
+  assert.deepEqual(parseMmrInput('0'), { ok: true, mmr: 0 })
+  assert.deepEqual(parseMmrInput(' 4250 '), { ok: true, mmr: 4250 })
+  assert.deepEqual(parseMmrInput('20000'), { ok: true, mmr: 20000 })
+})
+
+test('empty MMR input clears it', () => {
+  assert.deepEqual(parseMmrInput(''), { ok: true, mmr: null })
+  assert.deepEqual(parseMmrInput('  '), { ok: true, mmr: null })
+})
+
+test('MMR input rejects non-integers and out-of-range values', () => {
+  for (const raw of ['abc', '20001', '25000', '-1', '4.5', '1e3', '4,250']) {
+    assert.deepEqual(parseMmrInput(raw), { ok: false }, raw)
+  }
+})
+
+test('star estimates tile from Herald 1 up to Immortal with no gaps or overlaps', () => {
+  let next = 0
+  for (const tier of [1, 2, 3, 4, 5, 6, 7] as const) {
+    for (const stars of [1, 2, 3, 4, 5] as const) {
+      const range = estimatedMmrRange({ kind: 'ranked', tier, stars })!
+      assert.equal(range.from, next, `tier ${tier} star ${stars}`)
+      assert.ok(range.to! > range.from)
+      next = range.to! + 1
+    }
+  }
+  assert.equal(estimatedMmrRange({ kind: 'immortal', leaderboardRank: null })!.from, next)
 })

@@ -13,6 +13,7 @@ const EXAMPLE: PublicVerification = {
   medal: { kind: 'ranked', tier: 6, stars: 4 },
   region: { name: 'Europe', games: 91, share: 0.91 },
   checkedAt: new Date('2026-10-29T12:00:00Z'),
+  selfReportedMmr: null,
 }
 
 function Home() {
