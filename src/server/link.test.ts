@@ -66,15 +66,50 @@ test('linking an account last checked over an hour ago asks OpenDota again', asy
   assert.deepEqual((await db.getVerification('linker_two'))?.medal, { kind: 'ranked', tier: 6, stars: 1 })
 })
 
-test('a claim deleted and made again is checked again, because deletion keeps nothing to reuse', async (t) => {
+test('deleting a claim and making it again, twenty times within the hour, asks OpenDota only the first time', async (t) => {
   const opendota = stubOpenDota(t)
   const steamId64 = '76561198000000103'
   const start = day(3)
-  await claimAccount(await steam(steamId64), 'claimer_three', { now: start })
+  for (let cycle = 0; cycle < 20; cycle++) {
+    const now = later(start, cycle * 2 * MINUTE)
+    assert.equal((await claimAccount(await steam(steamId64), 'claimer_three', { now })).ok, true)
+    await db.deletePersonData({ steamKey: (await steam(steamId64)).steamKey })
+    opendota.rankTier = 61
+  }
+  assert.equal(opendota.calls.length, 3)
+  assert.equal((await claimAccount(await steam(steamId64), 'claimer_three', { now: later(start, 59 * MINUTE) })).ok, true)
+  const remade = await db.getClaimBySteamKey((await steam(steamId64)).steamKey)
+  assert.deepEqual(remade?.medal, { kind: 'ranked', tier: 5, stars: 3 })
+  assert.equal(remade?.checkedAt.getTime(), start.getTime())
+})
+
+test('a claim deleted and made again an hour after its last check asks OpenDota again', async (t) => {
+  const opendota = stubOpenDota(t)
+  const steamId64 = '76561198000000104'
+  const start = day(5)
+  await claimAccount(await steam(steamId64), 'claimer_four', { now: start })
   await db.deletePersonData({ steamKey: (await steam(steamId64)).steamKey })
   opendota.calls = []
-  assert.equal((await claimAccount(await steam(steamId64), 'claimer_three', { now: later(start, MINUTE) })).ok, true)
-  assert.equal(opendota.calls.length > 0, true)
+  opendota.rankTier = 61
+  assert.equal((await claimAccount(await steam(steamId64), 'claimer_four', { now: later(start, HOUR) })).ok, true)
+  assert.equal(opendota.calls.length, 3)
+  assert.deepEqual((await db.getClaimBySteamKey((await steam(steamId64)).steamKey))?.medal, { kind: 'ranked', tier: 6, stars: 1 })
+})
+
+test('refreshing a page the moment its cooldown ends asks OpenDota again', async (t) => {
+  const opendota = stubOpenDota(t)
+  const steamId64 = '76561198000000105'
+  const start = day(7)
+  await claimAccount(await steam(steamId64), 'claimer_five', { now: start })
+  opendota.calls = []
+  opendota.rankTier = 61
+  assert.deepEqual(await refreshClaim(await steam(steamId64), { now: later(start, HOUR - 1) }), { ok: false, error: 'cooldown' })
+  assert.equal(opendota.calls.length, 0)
+  assert.equal((await refreshClaim(await steam(steamId64), { now: later(start, HOUR) })).ok, true)
+  assert.equal(opendota.calls.length, 2)
+  const refreshed = await db.getClaimBySteamKey((await steam(steamId64)).steamKey)
+  assert.deepEqual(refreshed?.medal, { kind: 'ranked', tier: 6, stars: 1 })
+  assert.equal(refreshed?.checkedAt.getTime(), later(start, HOUR).getTime())
 })
 
 test('a check that would pass the per-minute budget reports busy with no calls until the minute has passed', async (t) => {
