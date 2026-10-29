@@ -72,7 +72,16 @@ test('production refuses to start without a pepper of 32 or more hex characters'
 
 test('development without a pepper uses a fixed one, so dev pages keep their owners across restarts', () => {
   assert.equal(parseSteamIdPepper(undefined, false), DEV_STEAM_ID_PEPPER)
-  assert.equal(parseSteamIdPepper(DEV_STEAM_ID_PEPPER, true), DEV_STEAM_ID_PEPPER)
+  assert.equal(parseSteamIdPepper(DEV_STEAM_ID_PEPPER, false), DEV_STEAM_ID_PEPPER)
+})
+
+test('production refuses the public development pepper', () => {
+  assert.throws(() => parseSteamIdPepper(DEV_STEAM_ID_PEPPER, true), /STEAM_ID_PEPPER/)
+})
+
+test('a pepper typed in upper case is the same pepper as in lower case', () => {
+  assert.equal(parseSteamIdPepper(PEPPER.toUpperCase(), true), PEPPER)
+  assert.equal(parseSteamIdPepper(PEPPER.toUpperCase(), false), PEPPER)
 })
 
 test('a session signed in before keys were stored in it reads as signed out, and reading a session never hashes', async (t) => {
