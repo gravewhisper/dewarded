@@ -2,7 +2,7 @@
   <img src="public/medals/rank_icon_8b.png" alt="" width="96" height="96">
 </p>
 
-<h1 align="center">Medallion</h1>
+<h1 align="center">Dewarded</h1>
 
 <p align="center">
   <strong>Prove your Dota 2 medal on Reddit.</strong><br>
@@ -20,18 +20,18 @@
 </p>
 
 <p align="center">
-  <img src="docs/cards.png" alt="Three Medallion cards: Legend 3 on purple, Immortal #16 on red with a self-reported MMR of 9,200, and Crusader 2 on teal" width="860">
+  <img src="docs/cards.png" alt="Three Dewarded cards: Legend 3 on purple, Immortal #16 on red with a self-reported MMR of 9,200, and Crusader 2 on teal" width="860">
 </p>
 
 ## Why
 
-Dota subreddits are full of confident gameplay advice. Some of it comes from players whose advice only works in their own bracket. Medallion lets a player show their real medal with one link, instead of a screenshot anyone can fake.
+Dota subreddits are full of confident gameplay advice. Some of it comes from players whose advice only works in their own bracket. Dewarded lets a player show their real medal with one link, instead of a screenshot anyone can fake.
 
 ## How it works
 
-1. **Steam login** proves which Steam account you own. You sign in on `steamcommunity.com`, and Medallion confirms the response with Steam's own server before trusting it.
-2. **OpenDota** supplies the medal, the Immortal leaderboard rank and the region you play in most. Medallion asks OpenDota to refresh the account from Valve first.
-3. **You type your Reddit username.** Medallion shows it on your page as a claim, because it cannot check it.
+1. **Steam login** proves which Steam account you own. You sign in on `steamcommunity.com`, and Dewarded confirms the response with Steam's own server before trusting it.
+2. **OpenDota** supplies the medal, the Immortal leaderboard rank and the region you play in most. Dewarded asks OpenDota to refresh the account from Valve first.
+3. **You type your Reddit username.** Dewarded shows it on your page as a claim, because it cannot check it.
 4. **Your page** lives at `/p/<id>`, a random 10-character address that never contains your Steam ID. It shows a card colored by your medal tier, and link previews show the medal.
 5. **You add the link to your Reddit profile**, in the social links or the about text. A reader who doubts you opens your Reddit profile and checks that it links to your page. That backlink is what ties the medal to the Reddit name.
 
@@ -39,7 +39,7 @@ The medal is verified. The Reddit name is a claim until a reader checks the back
 
 ### Reddit login mode
 
-If Reddit grants Medallion API access, `VERIFY_MODE=reddit` switches to a flow where Reddit login proves the username with the `identity` scope, Steam login proves the account, and the page lives at `/u/<reddit-name>` with no claim step. `/u/` pages keep working in either mode, and so do `/p/` pages.
+If Reddit grants Dewarded API access, `VERIFY_MODE=reddit` switches to a flow where Reddit login proves the username with the `identity` scope, Steam login proves the account, and the page lives at `/u/<reddit-name>` with no claim step. `/u/` pages keep working in either mode, and so do `/p/` pages.
 
 ## What the card shows
 
@@ -58,7 +58,7 @@ Valve does not publish numeric MMR, so no outside site can verify it. The card l
 
 - Nothing is stored until you sign in through Steam and enter a Reddit username.
 - The Steam account is never shown publicly. Public pages only receive the medal, region, check date, claimed Reddit name and optional self-reported MMR.
-- Medallion never connects to your Reddit account. In reddit mode, the Reddit token is used once to read your username and then discarded.
+- Dewarded never connects to your Reddit account. In reddit mode, the Reddit token is used once to read your username and then discarded.
 - One button deletes everything. The full list is on the site's `/privacy` page.
 
 ## Running locally
@@ -98,7 +98,7 @@ The app runs as one machine with the SQLite file on a Fly volume. Edit `app`, `p
 
 ```bash
 fly apps create <app>
-fly volumes create medallion_data --size 1 --region <region>
+fly volumes create dewarded_data --size 1 --region <region>
 fly secrets set SESSION_SECRET=$(openssl rand -hex 32)
 fly deploy
 ```
@@ -114,7 +114,7 @@ The free tier allows 60 calls a minute and 3,000 a day per server IP. Each check
 Code is [MIT](LICENSE).
 
 - Rank data comes from the [OpenDota API](https://docs.opendota.com).
-- MMR estimates come from [Liquipedia](https://liquipedia.net/dota2/Matchmaking/Seasonal_Rankings) (CC BY-SA 3.0). The Immortal start of 5,620 is Medallion's inference from Liquipedia's Divine 5 value, not a Liquipedia number.
+- MMR estimates come from [Liquipedia](https://liquipedia.net/dota2/Matchmaking/Seasonal_Rankings) (CC BY-SA 3.0). The Immortal start of 5,620 is Dewarded's inference from Liquipedia's Divine 5 value, not a Liquipedia number.
 - The medal images in `public/medals/` belong to Valve, come from [OpenDota's web repo](https://github.com/odota/web), and are not covered by the MIT license.
 
-Medallion is not affiliated with Valve. Dota 2 is a trademark of Valve Corporation.
+Dewarded is not affiliated with Valve. Dota 2 is a trademark of Valve Corporation.

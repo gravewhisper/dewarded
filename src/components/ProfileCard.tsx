@@ -79,7 +79,7 @@ export function ProfileCard({
           )}
         </div>
       )}
-      <p className="card-foot">Medallion · Steam login, rank from OpenDota</p>
+      <p className="card-foot">Dewarded · Steam login, rank from OpenDota</p>
     </article>
   )
 }
@@ -91,7 +91,7 @@ function SelfReportedMmr({ mmr, identity }: { mmr: number; identity: CardIdentit
       <span className="mmr-value">{formatMmr(mmr)}</span>
       <span className="mmr-tag">self-reported</span>
       <InfoPopover id="mmr-self-about" label="About self-reported MMR">
-        Valve doesn't share MMR numbers outside the game, so Medallion can't check this.{' '}
+        Valve doesn't share MMR numbers outside the game, so Dewarded can't check this.{' '}
         {identity.kind === 'reddit-verified'
           ? `u/${identity.username} typed it in.`
           : 'The owner of this Steam account typed it in.'}{' '}

@@ -11,7 +11,7 @@ export const Route = createRootRoute({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { name: 'theme-color', content: '#0d0e11' },
-      { title: 'Medallion' },
+      { title: 'Dewarded' },
     ],
     links: [
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -33,7 +33,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <header className="site-header">
           <Link to="/" className="wordmark">
-            MEDALLION
+            DEWARDED
           </Link>
           <Link to="/link" className="header-link">
             Verify your own medal

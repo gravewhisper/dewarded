@@ -14,12 +14,12 @@ export const Route = createFileRoute('/p/$id')({
     return page
   },
   head: ({ loaderData }) => {
-    if (!loaderData) return { meta: [{ title: 'Page not found | Medallion' }] }
+    if (!loaderData) return { meta: [{ title: 'Page not found | Dewarded' }] }
     const { claim: c } = loaderData
     const title = `u/${c.claimedRedditUsername} (claimed): ${medalLabel(c.medal)}`
     const description = [
       `Dota 2 medal verified through Steam login: ${medalLabel(c.medal)}.`,
-      `The Reddit name u/${c.claimedRedditUsername} is claimed, not confirmed by Medallion.`,
+      `The Reddit name u/${c.claimedRedditUsername} is claimed, not confirmed by Dewarded.`,
       c.region && `Region (inferred): ${regionLabel(c.region)}.`,
       `Checked ${formatDate(c.checkedAt)}.`,
     ]
@@ -27,7 +27,7 @@ export const Route = createFileRoute('/p/$id')({
       .join(' ')
     return {
       meta: [
-        { title: `${title} | Medallion` },
+        { title: `${title} | Dewarded` },
         { name: 'description', content: description },
         { property: 'og:title', content: title },
         { property: 'og:description', content: description },
@@ -61,7 +61,7 @@ function ClaimPage() {
           <span className="caps claim-tag">Not confirmed</span>
         </h2>
         <p>
-          Reddit doesn't let Medallion check this automatically. To confirm, open their Reddit
+          Reddit doesn't let Dewarded check this automatically. To confirm, open their Reddit
           profile and check that it links to this page.
         </p>
         <p className="small">
@@ -94,12 +94,12 @@ function UnknownClaim() {
     <main className="page page-center">
       <article className="card profile-card unknown-card">
         <div className="card-bar">
-          <span className="card-user">Medallion page</span>
+          <span className="card-user">Dewarded page</span>
           <span className="caps">Not found</span>
         </div>
         <div className="card-body">
           <h1>No medal page here</h1>
-          <p className="muted">This link doesn't match a Medallion page. It may have been deleted.</p>
+          <p className="muted">This link doesn't match a Dewarded page. It may have been deleted.</p>
           <a className="button primary" href="/link">
             Verify your own medal
           </a>

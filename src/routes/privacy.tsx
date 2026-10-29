@@ -3,7 +3,7 @@ import { getVerifyMode } from '#/serverFns'
 import { ISSUES_URL } from '#/site'
 
 export const Route = createFileRoute('/privacy')({
-  head: () => ({ meta: [{ title: 'Privacy | Medallion' }] }),
+  head: () => ({ meta: [{ title: 'Privacy | Dewarded' }] }),
   loader: () => getVerifyMode(),
   component: PrivacyPage,
 })
@@ -32,16 +32,16 @@ function SharedSections() {
 function BacklinkPrivacy() {
   return (
     <main className="page prose">
-      <h1>What Medallion stores</h1>
+      <h1>What Dewarded stores</h1>
       <p>
-        Medallion stores nothing about you until you sign in through Steam and enter a Reddit
+        Dewarded stores nothing about you until you sign in through Steam and enter a Reddit
         username. You can delete everything at any time from <Link to="/me">My link</Link>.
       </p>
 
       <h2>Stored and shown publicly on your page</h2>
       <ul>
         <li>
-          The Reddit username you type. It is shown as a claim, because Medallion can't confirm
+          The Reddit username you type. It is shown as a claim, because Dewarded can't confirm
           you own it. Readers confirm it by checking that your Reddit profile links to your page.
         </li>
         <li>Your medal, and your leaderboard rank if you are on the Immortal leaderboard.</li>
@@ -49,7 +49,7 @@ function BacklinkPrivacy() {
         <li>When your medal was last checked.</li>
         <li>
           Your MMR, only if you are Immortal and choose to enter it. It is labelled as
-          self-reported because Medallion can't check it. You can clear it at any time on{' '}
+          self-reported because Dewarded can't check it. You can clear it at any time on{' '}
           <Link to="/me">My link</Link>, and it is cleared automatically if your medal drops below
           Immortal.
         </li>
@@ -59,7 +59,7 @@ function BacklinkPrivacy() {
       <h2>Stored but never shown</h2>
       <ul>
         <li>
-          Your Steam ID and Dota account ID. Medallion needs them to check your medal again and to
+          Your Steam ID and Dota account ID. Dewarded needs them to check your medal again and to
           know the page is yours. Your public page does not show them or link to your Steam or
           OpenDota profile. Only you see your Steam ID, on <Link to="/me">My link</Link>.
         </li>
@@ -75,9 +75,9 @@ function BacklinkPrivacy() {
 
       <h2>Not stored</h2>
       <ul>
-        <li>Your Steam password. Medallion never sees it.</li>
+        <li>Your Steam password. Dewarded never sees it.</li>
         <li>
-          Anything from Reddit. Medallion does not connect to your Reddit account or read your
+          Anything from Reddit. Dewarded does not connect to your Reddit account or read your
           profile.
         </li>
         <li>Your match history. Only the resulting region is saved.</li>
@@ -86,7 +86,7 @@ function BacklinkPrivacy() {
       <h2>Other services involved</h2>
       <ul>
         <li>Steam handles the sign-in.</li>
-        <li>OpenDota receives your Dota account ID when Medallion checks your medal.</li>
+        <li>OpenDota receives your Dota account ID when Dewarded checks your medal.</li>
         <li>
           Fly.io hosts the site. Like any web host, it processes request data such as IP addresses.
         </li>
@@ -100,9 +100,9 @@ function BacklinkPrivacy() {
 function RedditPrivacy() {
   return (
     <main className="page prose">
-      <h1>What Medallion stores</h1>
+      <h1>What Dewarded stores</h1>
       <p>
-        Medallion stores nothing about you until you finish both the Reddit and the Steam login.
+        Dewarded stores nothing about you until you finish both the Reddit and the Steam login.
         You can delete everything at any time from <Link to="/me">My link</Link>.
       </p>
 
@@ -114,7 +114,7 @@ function RedditPrivacy() {
         <li>When your medal was last checked.</li>
         <li>
           Your MMR, only if you are Immortal and choose to enter it. It is labelled as
-          self-reported because Medallion can't check it. You can clear it at any time on{' '}
+          self-reported because Dewarded can't check it. You can clear it at any time on{' '}
           <Link to="/me">My link</Link>, and it is cleared automatically if your medal drops below
           Immortal or you link a different Steam account.
         </li>
@@ -123,7 +123,7 @@ function RedditPrivacy() {
       <h2>Stored but never shown</h2>
       <ul>
         <li>
-          Your Steam ID and Dota account ID. Medallion needs them to check your medal again. Your
+          Your Steam ID and Dota account ID. Dewarded needs them to check your medal again. Your
           public page does not show them or link to your Steam or OpenDota profile. Only you see
           your Steam ID, on <Link to="/me">My link</Link>.
         </li>
@@ -139,9 +139,9 @@ function RedditPrivacy() {
 
       <h2>Not stored</h2>
       <ul>
-        <li>Your Reddit or Steam password. Medallion never sees them.</li>
+        <li>Your Reddit or Steam password. Dewarded never sees them.</li>
         <li>
-          Reddit access tokens. Medallion asks Reddit only for your username, uses the token once,
+          Reddit access tokens. Dewarded asks Reddit only for your username, uses the token once,
           and discards it.
         </li>
         <li>Your match history. Only the resulting region is saved.</li>
@@ -150,7 +150,7 @@ function RedditPrivacy() {
       <h2>Other services involved</h2>
       <ul>
         <li>Reddit and Steam handle the logins.</li>
-        <li>OpenDota receives your Dota account ID when Medallion checks your medal.</li>
+        <li>OpenDota receives your Dota account ID when Dewarded checks your medal.</li>
         <li>
           Fly.io hosts the site. Like any web host, it processes request data such as IP addresses.
         </li>

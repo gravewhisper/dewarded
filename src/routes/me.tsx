@@ -139,7 +139,7 @@ function BacklinkAccount({
         <li data-state="current">
           <span className="step-n">2</span>
           <div>
-            <h2>Add your Medallion link to your Reddit profile</h2>
+            <h2>Add your Dewarded link to your Reddit profile</h2>
             <p>Put it in your profile settings, under social links or in the about/bio text.</p>
             <p className="share-url">
               <a href={pagePath}>{pageUrl}</a>

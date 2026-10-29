@@ -1,14 +1,14 @@
-app = "medallion"
+app = "dewarded"
 primary_region = "ams"
 
 [build]
 
 [env]
-  DATABASE_URL = "file:/data/medallion.db"
-  PUBLIC_URL = "https://medallion.fly.dev"
+  DATABASE_URL = "file:/data/dewarded.db"
+  PUBLIC_URL = "https://dewarded.fly.dev"
 
 [[mounts]]
-  source = "medallion_data"
+  source = "dewarded_data"
   destination = "/data"
 
 [http_service]

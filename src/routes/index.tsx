@@ -21,7 +21,7 @@ const INTRO: Record<VerifyMode, React.ReactNode> = {
   reddit: (
     <>
       <p>
-        Anyone can claim a rank in a comment. Medallion gives you a page at{' '}
+        Anyone can claim a rank in a comment. Dewarded gives you a page at{' '}
         <code>/u/your-name</code> with the medal OpenDota reports for your Steam account, so you
         can link to it instead of posting a screenshot.
       </p>
@@ -35,7 +35,7 @@ const INTRO: Record<VerifyMode, React.ReactNode> = {
   backlink: (
     <>
       <p>
-        Anyone can claim a rank in a comment. Sign in through Steam and Medallion gives you a page
+        Anyone can claim a rank in a comment. Sign in through Steam and Dewarded gives you a page
         with the medal OpenDota reports for your account, so you can link to it instead of posting
         a screenshot.
       </p>

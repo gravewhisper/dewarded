@@ -81,9 +81,9 @@ function SteamSignIn() {
       <p>
         You'll sign in on Steam's own site. Check that the address bar says{' '}
         <strong>https://steamcommunity.com</strong> before typing anything. Steam only tells
-        Medallion your account ID. Medallion never sees your password, can't trade, and never
+        Dewarded your account ID. Dewarded never sees your password, can't trade, and never
         asks for an API key or trade link.{' '}
-        <a href="https://github.com/gravewhisper/medallion/blob/master/src/server/steam.ts">
+        <a href="https://github.com/gravewhisper/dewarded/blob/master/src/server/steam.ts">
           Read the login code
         </a>
         .
@@ -173,7 +173,7 @@ function RedditSteps({
         <p>Logged in as u/{redditUsername}.</p>
       ) : (
         <>
-          <p>Medallion reads only your Reddit username.</p>
+          <p>Dewarded reads only your Reddit username.</p>
           <a className="button primary" href="/auth/reddit/start">
             Log in with Reddit
           </a>
@@ -223,7 +223,7 @@ function RedditSteps({
       error={error}
       notice={
         <>
-          Linking makes your Reddit username and your medal public on your Medallion page. Your
+          Linking makes your Reddit username and your medal public on your Dewarded page. Your
           Steam account is never shown. You can delete it any time.{' '}
           <Link to="/privacy">What we store</Link>.
         </>

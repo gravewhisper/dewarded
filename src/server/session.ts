@@ -8,7 +8,7 @@ export type Session = {
   steamId64?: string
 }
 
-const COOKIE = 'medallion_session'
+const COOKIE = 'dewarded_session'
 const MAX_AGE_S = 7 * 24 * 60 * 60
 
 function sign(body: string): string {

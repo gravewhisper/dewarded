@@ -14,7 +14,7 @@ export const Route = createFileRoute('/u/$redditUsername')({
     return profile
   },
   head: ({ loaderData }) => {
-    if (!loaderData) return { meta: [{ title: 'Unknown user | Medallion' }] }
+    if (!loaderData) return { meta: [{ title: 'Unknown user | Dewarded' }] }
     const { verification: v } = loaderData
     const title = `u/${v.redditUsername}: ${medalLabel(v.medal)}`
     const description = [
@@ -26,7 +26,7 @@ export const Route = createFileRoute('/u/$redditUsername')({
       .join(' ')
     return {
       meta: [
-        { title: `${title} | Medallion` },
+        { title: `${title} | Dewarded` },
         { name: 'description', content: description },
         { property: 'og:title', content: title },
         { property: 'og:description', content: description },
@@ -78,7 +78,7 @@ function UnknownUser() {
         </div>
         <div className="card-body">
           <h1>u/{redditUsername} hasn't verified a medal</h1>
-          <p className="muted">There is no Medallion record for this Reddit user.</p>
+          <p className="muted">There is no Dewarded record for this Reddit user.</p>
           <a className="button primary" href="/link">
             Verify your own medal
           </a>

@@ -17,7 +17,7 @@ export const config = {
   publicUrl: required('PUBLIC_URL', () => 'http://localhost:3000').replace(/\/$/, ''),
   // A per-process dev secret means sessions reset on restart, which is fine locally.
   sessionSecret: required('SESSION_SECRET', () => randomBytes(32).toString('hex')),
-  databaseUrl: process.env.DATABASE_URL || 'file:./data/medallion.db',
+  databaseUrl: process.env.DATABASE_URL || 'file:./data/dewarded.db',
   databaseAuthToken: process.env.DATABASE_AUTH_TOKEN || undefined,
   reddit: process.env.REDDIT_CLIENT_ID
     ? ({
@@ -26,7 +26,7 @@ export const config = {
       } satisfies RedditCredentials)
     : null,
   verifyMode: parseVerifyMode(process.env.VERIFY_MODE),
-  userAgent: 'web:medallion:0.1 (opt-in Dota 2 medal verification)',
+  userAgent: 'web:dewarded:0.1 (opt-in Dota 2 medal verification)',
 }
 
 // import.meta.env.DEV is a build-time constant, so a production build keeps the
