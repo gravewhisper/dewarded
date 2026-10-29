@@ -64,7 +64,7 @@ function StepsPage({
             <div>
               <h2>
                 {step.title}
-                <span className="caps step-status">{STATUS_LABELS[states[i]!]}</span>
+                <span className="caps step-status">{STATUS_LABELS[states[i]]}</span>
               </h2>
               {step.body}
             </div>

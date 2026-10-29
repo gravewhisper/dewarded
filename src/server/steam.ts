@@ -60,5 +60,5 @@ export async function verifySteamCallback(
     return { ok: false, error: 'unreachable' }
   }
   const valid = text.split('\n').some((line) => line.trim() === 'is_valid:true')
-  return valid ? { ok: true, steamId64: match[1]! } : { ok: false, error: 'rejected' }
+  return valid ? { ok: true, steamId64: match[1] } : { ok: false, error: 'rejected' }
 }
