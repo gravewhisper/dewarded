@@ -1,12 +1,13 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync } from 'node:fs'
+import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { SteamCheck, SteamKey } from '#/domain'
+import type { Medal, SteamCheck, SteamKey } from '#/domain'
 import type { Person } from './db.ts'
 
-process.env.DATABASE_URL = `file:${join(mkdtempSync(join(tmpdir(), 'dewarded-deletion-')), 'test.db')}`
+const DB_PATH = join(mkdtempSync(join(tmpdir(), 'dewarded-deletion-')), 'test.db')
+process.env.DATABASE_URL = `file:${DB_PATH}`
 const db = await import('./db.ts')
 const { deleteIfConfirmed } = await import('./deletion.ts')
 
@@ -53,4 +54,14 @@ test('a delete request with the confirmation tick deletes the claim', async () =
   assert.equal(await deleteIfConfirmed(form({ confirm: 'yes' }), lookup.person), 'deleted')
   assert.equal(await db.getClaimBySteamKey(STEAM_KEY), null)
   assert.equal(lookup.asked, 1)
+})
+
+test('a deleted claim leaves none of its bytes in the database file', async () => {
+  const steamKey = '5'.repeat(64) as SteamKey
+  const medal: Medal = { kind: 'immortal', leaderboardRank: 4321 }
+  const traces = ['erase_me_entirely', JSON.stringify(medal), steamKey]
+  await db.saveClaim({ ...check(steamKey), medal }, 'erase_me_entirely')
+  assert.deepEqual(traces.filter((trace) => readFileSync(DB_PATH).includes(trace)), traces)
+  assert.equal(await deleteIfConfirmed(form({ confirm: 'yes' }), async () => ({ steamKey })), 'deleted')
+  assert.deepEqual(traces.filter((trace) => readFileSync(DB_PATH).includes(trace)), [])
 })
