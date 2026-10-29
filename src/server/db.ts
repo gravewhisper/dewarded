@@ -59,6 +59,10 @@ async function open(): Promise<Client> {
       self_reported_mmr INTEGER
     )
   `)
+  await client.execute(
+    'CREATE TABLE IF NOT EXISTS opendota_calls (at INTEGER NOT NULL, calls INTEGER NOT NULL)',
+  )
+  await client.execute('CREATE INDEX IF NOT EXISTS opendota_calls_at ON opendota_calls (at)')
   return client
 }
 
@@ -274,5 +278,25 @@ export function deletePersonData(person: Person): Promise<void> {
     if (steamId64 === undefined) return
     await tx.execute({ sql: 'DELETE FROM verifications WHERE steam_id64 = ?', args: [steamId64] })
     await tx.execute({ sql: 'DELETE FROM claims WHERE steam_id64 = ?', args: [steamId64] })
+  })
+}
+
+const MINUTE_MS = 60 * 1000
+const DAY_MS = 24 * 60 * MINUTE_MS
+
+export type CallLimits = { perMinute: number; perDay: number }
+
+export function reserveOpenDotaCalls(calls: number, now: Date, limits: CallLimits): Promise<boolean> {
+  const at = now.getTime()
+  return inWriteTransaction(async (tx) => {
+    await tx.execute({ sql: 'DELETE FROM opendota_calls WHERE at <= ?', args: [at - DAY_MS] })
+    const { rowsAffected } = await tx.execute({
+      sql: `INSERT INTO opendota_calls (at, calls)
+            SELECT ?, ?
+            WHERE (SELECT COALESCE(SUM(calls), 0) FROM opendota_calls WHERE at > ?) + ? <= ?
+              AND (SELECT COALESCE(SUM(calls), 0) FROM opendota_calls WHERE at > ?) + ? <= ?`,
+      args: [at, calls, at - MINUTE_MS, calls, limits.perMinute, at - DAY_MS, calls, limits.perDay],
+    })
+    return rowsAffected === 1
   })
 }

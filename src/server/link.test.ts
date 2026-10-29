@@ -72,3 +72,50 @@ test('a claim deleted and made again is checked again, because deletion keeps no
   assert.equal((await claimAccount(steamId64, 'claimer_three', { now: later(start, MINUTE) })).ok, true)
   assert.equal(opendota.calls.length > 0, true)
 })
+
+test('a check that would pass the per-minute budget reports busy with no calls until the minute has passed', async (t) => {
+  const opendota = stubOpenDota(t)
+  const start = day(10)
+  const limits = { perMinute: 6, perDay: 100 }
+  assert.equal((await claimAccount('76561198000000201', 'first', { now: start, limits })).ok, true)
+  assert.equal((await claimAccount('76561198000000202', 'second', { now: start, limits })).ok, true)
+  opendota.calls = []
+  const blocked = await claimAccount('76561198000000203', 'third', { now: later(start, 59 * 1000), limits })
+  assert.deepEqual(blocked, { ok: false, error: 'busy' })
+  assert.equal(opendota.calls.length, 0)
+  const retried = await claimAccount('76561198000000203', 'third', { now: later(start, MINUTE + 1), limits })
+  assert.equal(retried.ok, true)
+  assert.equal(opendota.calls.length, 3)
+})
+
+test('a check that would pass the daily budget reports busy with no calls until the day has passed', async (t) => {
+  const opendota = stubOpenDota(t)
+  const start = day(12)
+  const limits = { perMinute: 100, perDay: 6 }
+  await claimAccount('76561198000000301', 'first', { now: start, limits })
+  await claimAccount('76561198000000302', 'second', { now: later(start, HOUR), limits })
+  opendota.calls = []
+  const blocked = await claimAccount('76561198000000303', 'third', { now: later(start, 23 * HOUR), limits })
+  assert.deepEqual(blocked, { ok: false, error: 'busy' })
+  assert.equal(opendota.calls.length, 0)
+  const retried = await claimAccount('76561198000000303', 'third', { now: later(start, 24 * HOUR + 1), limits })
+  assert.equal(retried.ok, true)
+  assert.equal(opendota.calls.length, 3)
+})
+
+test('thirty claims at once never make more OpenDota calls than the per-minute budget', async (t) => {
+  const opendota = stubOpenDota(t)
+  const now = day(14)
+  const limits = { perMinute: 10, perDay: 1000 }
+  const results = await Promise.all(
+    Array.from({ length: 30 }, (_, i) =>
+      claimAccount(`765611980000004${String(i).padStart(2, '0')}`, `burst_${i}`, { now, limits }),
+    ),
+  )
+  const granted = results.filter((result) => result.ok).length
+  const busy = results.filter((result) => !result.ok && result.error === 'busy').length
+  t.diagnostic(`granted ${granted}, busy ${busy}, fetch calls ${opendota.calls.length}`)
+  assert.equal(granted, 3)
+  assert.equal(busy, 27)
+  assert.equal(opendota.calls.length, granted * 3)
+})

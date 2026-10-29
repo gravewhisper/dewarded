@@ -8,12 +8,16 @@ import {
   type SteamCheck,
 } from '#/domain'
 import { config } from './config'
-import { getLatestSteamCheck } from './db'
+import { getLatestSteamCheck, reserveOpenDotaCalls, type CallLimits } from './db'
 import regionNames from './regions.json'
 
 const API = 'https://api.opendota.com/api'
 
 export const MEDAL_REUSE_MS = 60 * 60 * 1000
+
+export const OPENDOTA_LIMITS: CallLimits = { perMinute: 50, perDay: 2800 }
+
+const CALLS_PER_CHECK = 3
 
 export type OpenDotaResult =
   | { ok: true; medal: Medal; region: Region | null }
@@ -77,11 +81,11 @@ export async function fetchMedal(accountId: number): Promise<OpenDotaResult> {
   }
 }
 
-export type CheckError = Extract<OpenDotaResult, { ok: false }>['error']
+export type CheckError = Extract<OpenDotaResult, { ok: false }>['error'] | 'busy'
 
 export type CheckResult = { ok: true; check: SteamCheck } | { ok: false; error: CheckError }
 
-export type CheckOptions = { now?: Date }
+export type CheckOptions = { now?: Date; limits?: CallLimits }
 
 type Plan = { kind: 'reuse'; check: SteamCheck } | { kind: 'fetch' }
 
@@ -94,10 +98,11 @@ function planCheck(previous: SteamCheck | null, now: Date): Plan {
 
 export async function checkSteamAccount(
   steamId64: string,
-  { now = new Date() }: CheckOptions = {},
+  { now = new Date(), limits = OPENDOTA_LIMITS }: CheckOptions = {},
 ): Promise<CheckResult> {
   const plan = planCheck(await getLatestSteamCheck(steamId64), now)
   if (plan.kind === 'reuse') return { ok: true, check: plan.check }
+  if (!(await reserveOpenDotaCalls(CALLS_PER_CHECK, now, limits))) return { ok: false, error: 'busy' }
   const accountId = steamId64ToAccountId(steamId64)
   const result = await fetchMedal(accountId)
   if (!result.ok) return result

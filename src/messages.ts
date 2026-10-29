@@ -12,6 +12,7 @@ export const ERROR_MESSAGES: Record<string, string> = {
     "OpenDota hasn't seen this Steam account before. Dewarded asked it to look the account up. Try again in a minute.",
   rate_limited: 'OpenDota is rate limiting us. Try again in a few minutes.',
   upstream: 'OpenDota returned an error. Try again later.',
+  busy: 'Medal checks are busy right now. Try again in a few minutes.',
   cooldown: 'Checked recently. Try again later.',
   not_linked: 'No linked Steam account.',
   mmr_invalid: 'MMR must be a whole number from 5,620 (Immortal) to 20,000. Nothing was saved.',
