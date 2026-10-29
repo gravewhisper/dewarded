@@ -4,6 +4,9 @@ import { parseVerifyMode } from '#/domain'
 type RedditCredentials = { clientId: string; clientSecret: string }
 
 const isProduction = process.env.NODE_ENV === 'production'
+const isDevBuild = import.meta.env?.DEV === true
+
+const ephemeralDevSessionSecret = () => randomBytes(32).toString('hex')
 
 function required(name: string, devDefault: () => string): string {
   const value = process.env[name]
@@ -15,7 +18,7 @@ function required(name: string, devDefault: () => string): string {
 export const config = {
   isProduction,
   publicUrl: required('PUBLIC_URL', () => 'http://localhost:3000').replace(/\/$/, ''),
-  sessionSecret: required('SESSION_SECRET', () => randomBytes(32).toString('hex')),
+  sessionSecret: required('SESSION_SECRET', ephemeralDevSessionSecret),
   databaseUrl: process.env.DATABASE_URL || 'file:./data/dewarded.db',
   databaseAuthToken: process.env.DATABASE_AUTH_TOKEN || undefined,
   reddit: process.env.REDDIT_CLIENT_ID
@@ -29,7 +32,7 @@ export const config = {
 }
 
 export const devLoginEnabled =
-  import.meta.env?.DEV === true &&
+  isDevBuild &&
   !config.isProduction &&
   config.reddit === null &&
   config.verifyMode === 'reddit'

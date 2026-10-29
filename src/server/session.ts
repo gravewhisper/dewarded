@@ -47,6 +47,12 @@ export function writeSession(session: Session): void {
   })
 }
 
+export function consumeRedditState(): string | undefined {
+  const { redditState, ...session } = readSession()
+  writeSession(session)
+  return redditState
+}
+
 export function clearSession(): void {
   deleteCookie(COOKIE, { path: '/' })
 }

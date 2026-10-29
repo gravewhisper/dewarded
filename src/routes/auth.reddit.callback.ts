@@ -3,7 +3,7 @@ import { normalizeRedditUsername } from '#/domain'
 import { config } from '#/server/config'
 import { linkError, redirectTo } from '#/server/http'
 import { exchangeCodeForUsername } from '#/server/reddit'
-import { readSession, writeSession } from '#/server/session'
+import { consumeRedditState, writeSession } from '#/server/session'
 
 export const Route = createFileRoute('/auth/reddit/callback')({
   server: {
@@ -11,8 +11,7 @@ export const Route = createFileRoute('/auth/reddit/callback')({
       GET: async ({ request }) => {
         if (!config.reddit) return linkError('reddit_unconfigured')
         const params = new URL(request.url).searchParams
-        const { redditState, ...session } = readSession()
-        writeSession(session)
+        const redditState = consumeRedditState()
         if (!redditState || params.get('state') !== redditState) return linkError('reddit_state')
         const code = params.get('code')
         if (params.get('error') || !code) return linkError('reddit_denied')
