@@ -82,8 +82,8 @@ export function parseRedditUsername(raw: string): string | null {
 
 export type VerifyMode = 'reddit' | 'backlink'
 
-export function parseVerifyMode(raw: string | undefined, redditConfigured: boolean): VerifyMode {
-  if (raw === undefined || raw === '') return redditConfigured ? 'reddit' : 'backlink'
+export function parseVerifyMode(raw: string | undefined): VerifyMode {
+  if (raw === undefined || raw === '') return 'backlink'
   if (raw === 'reddit' || raw === 'backlink') return raw
   throw new Error(`VERIFY_MODE must be "reddit" or "backlink", got "${raw}"`)
 }

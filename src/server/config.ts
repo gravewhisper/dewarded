@@ -25,7 +25,7 @@ export const config = {
         clientSecret: process.env.REDDIT_CLIENT_SECRET ?? '',
       } satisfies RedditCredentials)
     : null,
-  verifyMode: parseVerifyMode(process.env.VERIFY_MODE, Boolean(process.env.REDDIT_CLIENT_ID)),
+  verifyMode: parseVerifyMode(process.env.VERIFY_MODE),
   userAgent: 'web:medallion:0.1 (opt-in Dota 2 medal verification)',
 }
 

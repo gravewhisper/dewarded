@@ -290,21 +290,19 @@ test('claimed Reddit names may be typed with a u/ prefix', () => {
   assert.equal(parseRedditUsername('u/'), null)
 })
 
-test('verify mode defaults to reddit only when Reddit credentials exist', () => {
-  assert.equal(parseVerifyMode(undefined, true), 'reddit')
-  assert.equal(parseVerifyMode(undefined, false), 'backlink')
-  assert.equal(parseVerifyMode('', true), 'reddit')
-  assert.equal(parseVerifyMode('', false), 'backlink')
+test('verify mode defaults to backlink', () => {
+  assert.equal(parseVerifyMode(undefined), 'backlink')
+  assert.equal(parseVerifyMode(''), 'backlink')
 })
 
-test('an explicit verify mode wins over the default', () => {
-  assert.equal(parseVerifyMode('backlink', true), 'backlink')
-  assert.equal(parseVerifyMode('reddit', false), 'reddit')
+test('reddit mode needs VERIFY_MODE=reddit', () => {
+  assert.equal(parseVerifyMode('reddit'), 'reddit')
+  assert.equal(parseVerifyMode('backlink'), 'backlink')
 })
 
 test('an unknown verify mode is a startup error', () => {
-  assert.throws(() => parseVerifyMode('Backlink', false), /VERIFY_MODE/)
-  assert.throws(() => parseVerifyMode('both', true), /VERIFY_MODE/)
+  assert.throws(() => parseVerifyMode('Backlink'), /VERIFY_MODE/)
+  assert.throws(() => parseVerifyMode('both'), /VERIFY_MODE/)
 })
 
 test('public claim carries no Steam identifiers', () => {
