@@ -123,6 +123,7 @@ This table lists the main paths, not every file.
 | `src/server/config.ts` | Reads the environment once, including `VERIFY_MODE` |
 | `src/server/steam.ts`, `src/server/reddit.ts` | The two login protocols, Steam OpenID 2.0 and Reddit OAuth |
 | `src/routes/auth.*`, `src/routes/api.*` | Server-only route handlers. The CSRF middleware in `src/start.ts` rejects cross-site POSTs. |
+| `server.mjs` | The production server. It serves `dist/client` and the built app with srvx, adds the security headers to every response, and logs each request's method, path, status, and time, never its query string. |
 | `src/components/` | The medal card, the medal badge, the copy-link button, the info popover, and the forms for the Reddit name and the MMR |
 
 ## Deploy to Fly.io

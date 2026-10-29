@@ -13,5 +13,6 @@ ENV NODE_ENV=production PORT=3000
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile --prod
 COPY --from=build /app/dist ./dist
+COPY server.mjs ./
 EXPOSE 3000
-CMD ["pnpm", "start"]
+CMD ["node", "server.mjs"]

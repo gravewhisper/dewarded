@@ -24,7 +24,7 @@ async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API}${path}`, { headers: { 'User-Agent': config.userAgent } })
   if (res.status === 429) throw new RateLimited()
   if (res.status === 404) throw new NotIndexed()
-  if (!res.ok) throw new Error(`OpenDota ${path} returned ${res.status}`)
+  if (!res.ok) throw new Error(`OpenDota returned ${res.status}`)
   return (await res.json()) as T
 }
 
@@ -35,7 +35,7 @@ async function requestRefresh(accountId: number): Promise<void> {
       headers: { 'User-Agent': config.userAgent },
       signal: AbortSignal.timeout(5000),
     })
-    if (!res.ok) console.error(`OpenDota refresh for ${accountId} returned ${res.status}`)
+    if (!res.ok) console.error(`OpenDota refresh returned ${res.status}`)
   } catch (err) {
     console.error(err)
   }
@@ -51,7 +51,7 @@ export async function fetchMedal(accountId: number): Promise<OpenDotaResult> {
     if (!player.profile) return { ok: false, error: 'no_profile' }
     const medal = parseMedal(player.rank_tier, player.leaderboard_rank)
     if (!medal) {
-      console.error(`OpenDota returned unexpected rank_tier ${player.rank_tier} for ${accountId}`)
+      console.error(`OpenDota returned unexpected rank_tier ${player.rank_tier}`)
       return { ok: false, error: 'upstream' }
     }
     return { ok: true, medal, region: pickRegion(counts.region ?? {}, regionNames) }

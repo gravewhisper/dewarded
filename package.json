@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
     "seed-claim": "tsx scripts/seed-claim.ts",
-    "start": "srvx serve --prod --entry ./dist/server/server.js --static ../client"
+    "start": "NODE_ENV=production node server.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
