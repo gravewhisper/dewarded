@@ -42,6 +42,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {children}
         <footer className="site-footer">
           <Link to="/privacy">Privacy</Link>
+          <Link to="/faq">FAQ</Link>
           <Link to="/me">My link</Link>
           <span>Not affiliated with Valve. Dota 2 is a trademark of Valve Corporation.</span>
           <span>

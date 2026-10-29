@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { ProfileCard } from '#/components/ProfileCard'
 import type { PublicVerification, VerifyMode } from '#/domain'
 import { getVerifyMode } from '#/serverFns'
@@ -63,6 +63,9 @@ function Home() {
             Verify my medal
           </a>
         </div>
+        <p>
+          Questions? <Link to="/faq">Read the FAQ</Link>.
+        </p>
       </section>
       <ProfileCard
         identity={{

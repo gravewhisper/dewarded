@@ -728,6 +728,19 @@ form {
   margin: 0.35rem 0;
 }
 
+.faq-item {
+  scroll-margin-top: 16px;
+}
+
+.faq-item h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.faq-item h2 a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 52rem) {
   .home {
     grid-template-columns: minmax(0, 1fr);
