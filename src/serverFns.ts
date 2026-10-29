@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
-import { normalizeRedditUsername } from '#/domain'
-import { devLoginEnabled } from '#/server/config'
+import { medalArt, normalizeRedditUsername, publicVerification } from '#/domain'
+import { config, devLoginEnabled } from '#/server/config'
 import { getVerification } from '#/server/db'
 import { nextRefreshAt } from '#/server/link'
 import { readSession } from '#/server/session'
@@ -11,9 +11,10 @@ export const getProfile = createServerFn({ method: 'GET' })
     const verification = await getVerification(redditUsername)
     if (!verification) return null
     return {
-      verification,
+      verification: publicVerification(verification),
       isOwner: readSession().redditUsername === redditUsername,
       nextRefreshAt: nextRefreshAt(verification.checkedAt),
+      ogImage: `${config.publicUrl}${medalArt(verification.medal).icon}`,
     }
   })
 

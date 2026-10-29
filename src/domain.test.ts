@@ -5,6 +5,7 @@ import {
   medalLabel,
   parseMedal,
   pickRegion,
+  publicVerification,
   regionLabel,
   steamId64ToAccountId,
 } from './domain.ts'
@@ -104,4 +105,17 @@ test('every medal art path points at a vendored image', async () => {
       if (path) assert.ok(existsSync(new URL(`../public${path}`, import.meta.url)), path)
     }
   }
+})
+
+test('public verification carries no Steam identifiers', () => {
+  const shown = publicVerification({
+    redditUsername: 'someone',
+    steamId64: '76561198065514372',
+    accountId: 105248644,
+    medal: { kind: 'immortal', leaderboardRank: 16 },
+    region: null,
+    checkedAt: new Date(0),
+  })
+  assert.deepEqual(Object.keys(shown).sort(), ['checkedAt', 'medal', 'redditUsername', 'region'])
+  assert.doesNotMatch(JSON.stringify(shown), /76561198065514372|105248644/)
 })

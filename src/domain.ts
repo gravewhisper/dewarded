@@ -17,6 +17,20 @@ export type Verification = {
   checkedAt: Date
 }
 
+export type PublicVerification = Pick<
+  Verification,
+  'redditUsername' | 'medal' | 'region' | 'checkedAt'
+>
+
+export function publicVerification(v: Verification): PublicVerification {
+  return {
+    redditUsername: v.redditUsername,
+    medal: v.medal,
+    region: v.region,
+    checkedAt: v.checkedAt,
+  }
+}
+
 export type RegionCounts = Record<string, { games: number }>
 
 const STEAM_ID64_BASE = 76561197960265728n

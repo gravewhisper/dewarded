@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
+import { MedalBadge } from '#/components/MedalBadge'
 import { medalLabel, regionLabel } from '#/domain'
 import { errorSearch, formatDate } from '#/format'
 import { errorMessage } from '#/messages'
@@ -29,6 +30,10 @@ export const Route = createFileRoute('/u/$redditUsername')({
         { property: 'og:title', content: title },
         { property: 'og:description', content: description },
         { property: 'og:type', content: 'profile' },
+        { property: 'og:image', content: loaderData.ogImage },
+        { property: 'og:image:width', content: '256' },
+        { property: 'og:image:height', content: '256' },
+        { name: 'twitter:card', content: 'summary' },
       ],
     }
   },
@@ -42,20 +47,51 @@ function ProfilePage() {
   const coolingDown = nextRefreshAt.getTime() > Date.now()
   return (
     <main>
-      <p className="muted">u/{v.redditUsername}</p>
-      <h1 className="medal">{medalLabel(v.medal)}</h1>
-      {v.region && <p>{regionLabel(v.region)} (inferred from OpenDota)</p>}
-      <p className="muted">
-        Steam account verified by Steam login. Medal from{' '}
-        <a href={`https://www.opendota.com/players/${v.accountId}`}>OpenDota</a>, checked{' '}
-        {formatDate(v.checkedAt)}.
-      </p>
-      {error && <p className="error">{error}</p>}
-      {isOwner && (
-        <form method="post" action="/api/refresh">
-          <button disabled={coolingDown}>Refresh</button>{' '}
-          {coolingDown && <span className="muted">Available after {formatDate(nextRefreshAt)}.</span>}
-        </form>
+      <article className="record">
+        <MedalBadge medal={v.medal} size={200} />
+        <div>
+          <p className="label">Verified medal record</p>
+          <h1>u/{v.redditUsername}</h1>
+          <dl className="record-dl">
+            <div>
+              <dt>Rank</dt>
+              <dd className="rank-value">{medalLabel(v.medal)}</dd>
+            </div>
+            <div>
+              <dt>Region</dt>
+              <dd>
+                {v.region ? (
+                  <>
+                    {regionLabel(v.region)} <span className="muted">(inferred)</span>
+                  </>
+                ) : (
+                  <span className="muted">Unknown</span>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Checked</dt>
+              <dd>{formatDate(v.checkedAt)}</dd>
+            </div>
+            <div>
+              <dt>Verified by</dt>
+              <dd>Steam login. Medal data from OpenDota.</dd>
+            </div>
+          </dl>
+        </div>
+      </article>
+      {(error || isOwner) && (
+        <section className="owner-tools">
+          {error && <p className="error">{error}</p>}
+          {isOwner && (
+            <form method="post" action="/api/refresh" className="actions">
+              <button disabled={coolingDown}>Refresh medal</button>
+              {coolingDown && (
+                <span className="muted">Available after {formatDate(nextRefreshAt)}.</span>
+              )}
+            </form>
+          )}
+        </section>
       )}
     </main>
   )
@@ -65,10 +101,13 @@ function UnknownUser() {
   const { redditUsername } = Route.useParams()
   return (
     <main>
-      <h1>Not verified</h1>
-      <p>u/{redditUsername} has not linked a Steam account on Medallion.</p>
+      <p className="label">Not verified</p>
+      <h1>u/{redditUsername}</h1>
+      <p>This Reddit user has not linked a Steam account on Medallion, so there is no medal to show.</p>
       <p>
-        <a href="/link">Verify your own medal</a>
+        <a className="button primary" href="/link">
+          Verify your own medal
+        </a>
       </p>
     </main>
   )
