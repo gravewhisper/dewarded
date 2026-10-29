@@ -129,7 +129,10 @@ export async function openDatabase(url: string, authToken: string | undefined, p
   for (const table of KEYED_TABLES) {
     await client.execute(`CREATE TABLE IF NOT EXISTS ${table.name} ${table.columns}`)
   }
-  if ((await keyWithPepper(client, pepper)) && localFile) await client.execute('VACUUM')
+  if ((await keyWithPepper(client, pepper)) && localFile) {
+    await client.execute('VACUUM')
+    await client.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+  }
   await client.execute(
     'CREATE TABLE IF NOT EXISTS opendota_calls (at INTEGER NOT NULL, calls INTEGER NOT NULL)',
   )
