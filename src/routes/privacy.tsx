@@ -111,8 +111,10 @@ function SharedSections({ copy }: { copy: ModeCopy }) {
 
       <h2>How long it is kept</h2>
       <p>
-        Your record stays until you delete it. Refreshing your medal replaces the old medal,
-        leaderboard rank, region and check date, so no history builds up.
+        Your record stays until you delete it. Deleting it removes it from the live database at
+        once, but Fly.io's daily backups of the database can keep it for up to 14 days. Refreshing
+        your medal replaces the old medal, leaderboard rank, region and check date, so no history
+        builds up.
       </p>
       <p>
         The server also logs each request's method, path, status and response time, and any server
@@ -130,8 +132,8 @@ function SharedSections({ copy }: { copy: ModeCopy }) {
         </li>
         {copy.corrections}
         <li>
-          Delete it. "Delete my data" on <Link to="/me">My link</Link> removes your record
-          immediately and your page stops existing.
+          Delete it. "Delete my data" on <Link to="/me">My link</Link> removes your record and
+          your page immediately. Fly.io's daily backups can keep a copy for up to 14 days.
         </li>
       </ul>
 

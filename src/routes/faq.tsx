@@ -136,7 +136,8 @@ const QUESTIONS: Question[] = [
           was checked, and your MMR if you entered one.
         </p>
         <p>
-          "Delete my data" on <Link to="/me">My link</Link> removes all of it and your page.{' '}
+          "Delete my data" on <Link to="/me">My link</Link> removes all of it and your page,
+          though Fly.io's daily backups can keep a copy for up to 14 days.{' '}
           <Link to="/privacy">The privacy page</Link> has the full list.
         </p>
         <p>
