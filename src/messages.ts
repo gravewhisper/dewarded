@@ -26,5 +26,5 @@ export const ERROR_MESSAGES: Record<string, string> = {
 
 export function errorMessage(code: string | undefined): string | null {
   if (!code) return null
-  return ERROR_MESSAGES[code] ?? 'Something went wrong.'
+  return Object.hasOwn(ERROR_MESSAGES, code) ? ERROR_MESSAGES[code] : 'Something went wrong.'
 }
