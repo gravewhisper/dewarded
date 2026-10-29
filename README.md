@@ -55,5 +55,7 @@ costs two calls, so refresh is owner-only with a one-hour cooldown.
 ## License and credits
 
 MIT, see `LICENSE`. Rank data comes from the [OpenDota API](https://docs.opendota.com).
+
+MMR estimates from [Liquipedia](https://liquipedia.net/dota2/Matchmaking/Seasonal_Rankings) (CC BY-SA 3.0). The Immortal start of 5,620 is Medallion's inference from Liquipedia's Divine 5 value, not a Liquipedia number.
 Medallion is not affiliated with Valve. Dota 2 is a trademark of Valve Corporation.
 The medal images in `public/medals/` belong to Valve, come from [OpenDota's web repo](https://github.com/odota/web), and are not covered by the MIT license.

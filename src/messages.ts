@@ -13,6 +13,8 @@ export const ERROR_MESSAGES: Record<string, string> = {
   upstream: 'OpenDota returned an error. Try again later.',
   cooldown: 'Checked recently. Try again later.',
   not_linked: 'No linked Steam account.',
+  mmr_invalid: 'MMR must be a whole number from 0 to 20,000. Nothing was saved.',
+  mmr_not_immortal: 'Self-reported MMR is only available for Immortal medals.',
 }
 
 export function errorMessage(code: string | undefined): string | null {

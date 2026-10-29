@@ -15,6 +15,7 @@ import { Route as MeRouteImport } from './routes/me'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ApiDeleteRouteImport } from './routes/api.delete'
 import { Route as ApiLogoutRouteImport } from './routes/api.logout'
+import { Route as ApiMmrRouteImport } from './routes/api.mmr'
 import { Route as ApiRefreshRouteImport } from './routes/api.refresh'
 import { Route as ApiUnlinkRouteImport } from './routes/api.unlink'
 import { Route as AuthDevLoginRouteImport } from './routes/auth.dev-login'
@@ -52,6 +53,11 @@ const ApiDeleteRoute = ApiDeleteRouteImport.update({
 const ApiLogoutRoute = ApiLogoutRouteImport.update({
   id: '/api/logout',
   path: '/api/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMmrRoute = ApiMmrRouteImport.update({
+  id: '/api/mmr',
+  path: '/api/mmr',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRefreshRoute = ApiRefreshRouteImport.update({
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
+  '/api/mmr': typeof ApiMmrRoute
   '/api/refresh': typeof ApiRefreshRoute
   '/api/unlink': typeof ApiUnlinkRoute
   '/auth/dev-login': typeof AuthDevLoginRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
+  '/api/mmr': typeof ApiMmrRoute
   '/api/refresh': typeof ApiRefreshRoute
   '/api/unlink': typeof ApiUnlinkRoute
   '/auth/dev-login': typeof AuthDevLoginRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/api/delete': typeof ApiDeleteRoute
   '/api/logout': typeof ApiLogoutRoute
+  '/api/mmr': typeof ApiMmrRoute
   '/api/refresh': typeof ApiRefreshRoute
   '/api/unlink': typeof ApiUnlinkRoute
   '/auth/dev-login': typeof AuthDevLoginRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/api/delete'
     | '/api/logout'
+    | '/api/mmr'
     | '/api/refresh'
     | '/api/unlink'
     | '/auth/dev-login'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/api/delete'
     | '/api/logout'
+    | '/api/mmr'
     | '/api/refresh'
     | '/api/unlink'
     | '/auth/dev-login'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/api/delete'
     | '/api/logout'
+    | '/api/mmr'
     | '/api/refresh'
     | '/api/unlink'
     | '/auth/dev-login'
@@ -202,6 +214,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ApiDeleteRoute: typeof ApiDeleteRoute
   ApiLogoutRoute: typeof ApiLogoutRoute
+  ApiMmrRoute: typeof ApiMmrRoute
   ApiRefreshRoute: typeof ApiRefreshRoute
   ApiUnlinkRoute: typeof ApiUnlinkRoute
   AuthDevLoginRoute: typeof AuthDevLoginRoute
@@ -254,6 +267,13 @@ declare module '@tanstack/react-router' {
       path: '/api/logout'
       fullPath: '/api/logout'
       preLoaderRoute: typeof ApiLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mmr': {
+      id: '/api/mmr'
+      path: '/api/mmr'
+      fullPath: '/api/mmr'
+      preLoaderRoute: typeof ApiMmrRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/refresh': {
@@ -322,6 +342,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ApiDeleteRoute: ApiDeleteRoute,
   ApiLogoutRoute: ApiLogoutRoute,
+  ApiMmrRoute: ApiMmrRoute,
   ApiRefreshRoute: ApiRefreshRoute,
   ApiUnlinkRoute: ApiUnlinkRoute,
   AuthDevLoginRoute: AuthDevLoginRoute,

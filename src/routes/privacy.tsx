@@ -21,6 +21,12 @@ function PrivacyPage() {
         <li>Your medal, and your leaderboard rank if you are on the Immortal leaderboard.</li>
         <li>The region where you play the most ranked games, worked out from OpenDota data.</li>
         <li>When your medal was last checked.</li>
+        <li>
+          Your MMR, only if you are Immortal and choose to enter it. It is labelled as
+          self-reported because Medallion can't check it. You can clear it at any time on{' '}
+          <Link to="/me">My link</Link>, and it is cleared automatically if your medal drops below
+          Immortal or you link a different Steam account.
+        </li>
       </ul>
 
       <h2>Stored but never shown</h2>
