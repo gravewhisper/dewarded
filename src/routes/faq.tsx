@@ -23,16 +23,24 @@ type Question = { id: string; question: string; answer: React.ReactNode }
 const QUESTIONS: Question[] = [
   {
     id: 'steam-login',
-    question: 'Is the Steam login safe?',
+    question: 'Is signing in with Steam safe?',
     answer: (
       <>
         <p>
-          You sign in on steamcommunity.com itself, so check the address bar before typing
-          anything. Steam tells Dewarded only your Steam account ID. Dewarded never sees your
-          password, and the sign-in gives it no way to trade or to see your inventory.
+          The Steam button sends you to Steam's own site, and the address bar shows
+          steamcommunity.com. You type your password and Steam Guard code there, never on Dewarded.
         </p>
         <p>
-          Dewarded never asks for an API key or a trade link. Any site that does is a scam.{' '}
+          Steam sends back only your Steam ID, which is already public. Dewarded gets no email,
+          password, friends list, inventory or trade access. This kind of sign-in gives Dewarded no
+          permission over your account, so there is nothing to revoke. Dewarded then asks Steam
+          directly to confirm the reply is genuine, and <a href="#data">stores only a hash</a> of
+          the ID.
+        </p>
+        <p>
+          Type your Steam password only when the address bar says steamcommunity.com. Fake Steam
+          login pages are a common scam. Dewarded never asks for an API key or a trade link, and
+          any site that does is a scam too.{' '}
           <a href={`${REPO_URL}/blob/master/src/server/steam.ts`}>Read the login code</a>.
         </p>
       </>
