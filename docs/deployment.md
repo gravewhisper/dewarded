@@ -16,19 +16,20 @@ The pepper keys every hash in the database, so it has to exist before the first 
 	fly volumes create dewarded_data --size 1 --region <region>
 	```
 
-3. Generate a pepper into a file that only you can read.
+3. Generate a pepper into a temporary file outside the project folder. `mktemp` makes a file that only you can read. Run steps 3 to 5 in one terminal, because `$pepper_file` holds the path.
 
 	```bash
-	(umask 077; openssl rand -hex 32 > pepper.txt)
+	pepper_file=$(mktemp)
+	openssl rand -hex 32 > "$pepper_file"
 	```
 
-4. Copy the pepper from `pepper.txt` into a password manager. Keep that copy for as long as the database exists.
+4. Copy the pepper that `cat "$pepper_file"` prints into a password manager. Keep that copy for as long as the database exists.
 5. Set the secrets, then delete the file.
 
 	```bash
-	printf 'STEAM_ID_PEPPER=%s\n' "$(cat pepper.txt)" | fly secrets import
+	printf 'STEAM_ID_PEPPER=%s\n' "$(cat "$pepper_file")" | fly secrets import
 	printf 'SESSION_SECRET=%s\n' "$(openssl rand -hex 32)" | fly secrets import
-	rm pepper.txt
+	rm "$pepper_file"
 	```
 
 6. Deploy.
