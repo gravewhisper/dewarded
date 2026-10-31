@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto'
+import { dirname, join } from 'node:path'
 import { parseVerifyMode } from '#/domain'
 
 type RedditCredentials = { clientId: string; clientSecret: string }
@@ -32,12 +33,15 @@ export function parseSteamIdPepper(raw: string | undefined, production: boolean)
   return pepper
 }
 
+const databaseUrl = process.env.DATABASE_URL || 'file:./data/dewarded.db'
+
 export const config = {
   isProduction,
   publicUrl: required('PUBLIC_URL', () => 'http://localhost:3000').replace(/\/$/, ''),
   sessionSecret: required('SESSION_SECRET', ephemeralDevSessionSecret),
   steamIdPepper: parseSteamIdPepper(process.env.STEAM_ID_PEPPER, isProduction),
-  databaseUrl: process.env.DATABASE_URL || 'file:./data/dewarded.db',
+  databaseUrl,
+  claimImageDir: join(databaseUrl.startsWith('file:') ? dirname(databaseUrl.slice('file:'.length)) : 'data', 'og'),
   databaseAuthToken: process.env.DATABASE_AUTH_TOKEN || undefined,
   reddit: process.env.REDDIT_CLIENT_ID
     ? ({

@@ -17,6 +17,7 @@ import {
   type SteamKey,
   type Verification,
 } from '#/domain'
+import { removeClaimImages } from './claimImageFiles'
 import { config } from './config'
 import { derivePepperCheck, deriveSteamKey } from './steamKey'
 
@@ -303,8 +304,13 @@ export async function getClaim(id: ClaimId): Promise<Claim | null> {
   return rows[0] ? toClaim(rows[0]) : null
 }
 
-export function saveClaim(check: SteamCheck, claimedRedditUsername: string): Promise<ClaimId> {
-  return inWriteTransaction(async (tx) => {
+async function dropClaimImages(steamKey: SteamKey): Promise<void> {
+  const claim = await getClaimBySteamKey(steamKey)
+  if (claim) await removeClaimImages(claim.id)
+}
+
+export async function saveClaim(check: SteamCheck, claimedRedditUsername: string): Promise<ClaimId> {
+  const id = await inWriteTransaction(async (tx) => {
     const previous = await readClaim(tx, check.steamKey)
     const id = previous?.id ?? claimIdFromBytes(randomBytes(CLAIM_ID_LENGTH))
     await tx.execute({
@@ -330,20 +336,24 @@ export function saveClaim(check: SteamCheck, claimedRedditUsername: string): Pro
     })
     return id
   })
+  await removeClaimImages(id)
+  return id
 }
 
-export function renameClaim(steamKey: SteamKey, claimedRedditUsername: string): Promise<boolean> {
-  return inWriteTransaction(async (tx) => {
+export async function renameClaim(steamKey: SteamKey, claimedRedditUsername: string): Promise<boolean> {
+  const renamed = await inWriteTransaction(async (tx) => {
     const { rowsAffected } = await tx.execute({
       sql: 'UPDATE claims SET claimed_reddit_username = ? WHERE steam_key = ?',
       args: [claimedRedditUsername, steamKey],
     })
     return rowsAffected > 0
   })
+  await dropClaimImages(steamKey)
+  return renamed
 }
 
-export function setClaimMmr(steamKey: SteamKey, mmr: number | null): Promise<MmrSaveResult> {
-  return inWriteTransaction(async (tx) => {
+export async function setClaimMmr(steamKey: SteamKey, mmr: number | null): Promise<MmrSaveResult> {
+  const result = await inWriteTransaction(async (tx): Promise<MmrSaveResult> => {
     const current = await readClaim(tx, steamKey)
     if (!current) return 'not_linked'
     if (!mmrAllowed(current.medal)) return 'mmr_not_immortal'
@@ -353,12 +363,14 @@ export function setClaimMmr(steamKey: SteamKey, mmr: number | null): Promise<Mmr
     })
     return 'saved'
   })
+  await dropClaimImages(steamKey)
+  return result
 }
 
 export type Person = { steamKey: SteamKey } | { redditUsername: string }
 
 export async function deletePersonData(person: Person): Promise<void> {
-  await inWriteTransaction(async (tx) => {
+  const deletedClaim = await inWriteTransaction(async (tx) => {
     const steamKey =
       'steamKey' in person
         ? person.steamKey
@@ -369,10 +381,13 @@ export async function deletePersonData(person: Person): Promise<void> {
         args: [person.redditUsername],
       })
     }
-    if (steamKey === undefined) return
+    if (steamKey === undefined) return null
+    const claim = await readClaim(tx, steamKey)
     await tx.execute({ sql: 'DELETE FROM verifications WHERE steam_key = ?', args: [steamKey] })
     await tx.execute({ sql: 'DELETE FROM claims WHERE steam_key = ?', args: [steamKey] })
+    return claim?.id ?? null
   })
+  if (deletedClaim) await removeClaimImages(deletedClaim)
   if (config.databaseUrl.startsWith('file:')) {
     await queued((db) => db.execute('PRAGMA wal_checkpoint(TRUNCATE)'))
   }

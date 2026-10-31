@@ -16,12 +16,13 @@ export const Route = createFileRoute('/p/$id')({
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [{ title: 'Page not found | Dewarded' }] }
     const { claim: c } = loaderData
-    const title = `u/${c.claimedRedditUsername} (claimed): ${medalLabel(c.medal)}`
+    const medal = medalLabel(c.medal)
+    const title = `${medal} · u/${c.claimedRedditUsername}`
+    const region = c.region && regionLabel(c.region)
     const description = [
-      `Dota 2 medal verified through Steam login: ${medalLabel(c.medal)}.`,
-      `The Reddit name u/${c.claimedRedditUsername} is claimed, not confirmed by Dewarded.`,
-      c.region && `Region (inferred): ${regionLabel(c.region)}.`,
-      `Checked ${formatDate(c.checkedAt)}.`,
+      'Medal verified through Steam.',
+      region && `${region[0].toUpperCase()}${region.slice(1)}.`,
+      'Reddit name claimed, not confirmed.',
     ]
       .filter(Boolean)
       .join(' ')
@@ -29,13 +30,18 @@ export const Route = createFileRoute('/p/$id')({
       meta: [
         { title: `${title} | Dewarded` },
         { name: 'description', content: description },
+        { property: 'og:site_name', content: 'Dewarded' },
         { property: 'og:title', content: title },
         { property: 'og:description', content: description },
         { property: 'og:type', content: 'profile' },
         { property: 'og:image', content: loaderData.ogImage },
-        { property: 'og:image:width', content: '256' },
-        { property: 'og:image:height', content: '256' },
-        { name: 'twitter:card', content: 'summary' },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+        {
+          property: 'og:image:alt',
+          content: `${medal} medal of u/${c.claimedRedditUsername}, verified through Steam. Reddit name claimed, not confirmed.`,
+        },
+        { name: 'twitter:card', content: 'summary_large_image' },
       ],
     }
   },

@@ -13,7 +13,9 @@ const csrf = createCsrfMiddleware({
 const responseHeaders = createMiddleware().server(async ({ next }) => {
   const result = await next()
   applySecurityHeaders(result.response.headers)
-  result.response.headers.set('Cache-Control', 'no-store')
+  if (!result.response.headers.has('Cache-Control')) {
+    result.response.headers.set('Cache-Control', 'no-store')
+  }
   return result
 })
 

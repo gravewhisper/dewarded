@@ -30,6 +30,7 @@ import { Route as AuthRedditCallbackRouteImport } from './routes/auth.reddit.cal
 import { Route as AuthRedditStartRouteImport } from './routes/auth.reddit.start'
 import { Route as AuthSteamCallbackRouteImport } from './routes/auth.steam.callback'
 import { Route as AuthSteamStartRouteImport } from './routes/auth.steam.start'
+import { Route as OgPChar123idChar125DotpngRouteImport } from './routes/og.p.{$id}[.]png'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -136,6 +137,12 @@ const AuthSteamStartRoute = AuthSteamStartRouteImport.update({
   path: '/auth/steam/start',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OgPChar123idChar125DotpngRoute =
+  OgPChar123idChar125DotpngRouteImport.update({
+    id: '/og/p/{$id}.png',
+    path: '/og/p/{$id}.png',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/auth/reddit/start': typeof AuthRedditStartRoute
   '/auth/steam/callback': typeof AuthSteamCallbackRoute
   '/auth/steam/start': typeof AuthSteamStartRoute
+  '/og/p/{$id}.png': typeof OgPChar123idChar125DotpngRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -182,6 +190,7 @@ export interface FileRoutesByTo {
   '/auth/reddit/start': typeof AuthRedditStartRoute
   '/auth/steam/callback': typeof AuthSteamCallbackRoute
   '/auth/steam/start': typeof AuthSteamStartRoute
+  '/og/p/{$id}.png': typeof OgPChar123idChar125DotpngRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,6 +215,7 @@ export interface FileRoutesById {
   '/auth/reddit/start': typeof AuthRedditStartRoute
   '/auth/steam/callback': typeof AuthSteamCallbackRoute
   '/auth/steam/start': typeof AuthSteamStartRoute
+  '/og/p/{$id}.png': typeof OgPChar123idChar125DotpngRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
     | '/auth/reddit/start'
     | '/auth/steam/callback'
     | '/auth/steam/start'
+    | '/og/p/{$id}.png'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/auth/reddit/start'
     | '/auth/steam/callback'
     | '/auth/steam/start'
+    | '/og/p/{$id}.png'
   id:
     | '__root__'
     | '/'
@@ -277,6 +289,7 @@ export interface FileRouteTypes {
     | '/auth/reddit/start'
     | '/auth/steam/callback'
     | '/auth/steam/start'
+    | '/og/p/{$id}.png'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -301,6 +314,7 @@ export interface RootRouteChildren {
   AuthRedditStartRoute: typeof AuthRedditStartRoute
   AuthSteamCallbackRoute: typeof AuthSteamCallbackRoute
   AuthSteamStartRoute: typeof AuthSteamStartRoute
+  OgPChar123idChar125DotpngRoute: typeof OgPChar123idChar125DotpngRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -452,6 +466,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSteamStartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/og/p/{$id}.png': {
+      id: '/og/p/{$id}.png'
+      path: '/og/p/{$id}.png'
+      fullPath: '/og/p/{$id}.png'
+      preLoaderRoute: typeof OgPChar123idChar125DotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -477,6 +498,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRedditStartRoute: AuthRedditStartRoute,
   AuthSteamCallbackRoute: AuthSteamCallbackRoute,
   AuthSteamStartRoute: AuthSteamStartRoute,
+  OgPChar123idChar125DotpngRoute: OgPChar123idChar125DotpngRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

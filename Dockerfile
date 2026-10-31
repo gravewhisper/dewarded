@@ -14,6 +14,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile --prod
 COPY --from=build /app/dist ./dist
 COPY server.mjs docker-entrypoint.sh ./
+COPY og-fonts ./og-fonts
+COPY public/medals ./public/medals
 RUN mkdir /data && chown node:node /data
 EXPOSE 3000
 ENTRYPOINT ["./docker-entrypoint.sh"]

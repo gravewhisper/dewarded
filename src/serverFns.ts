@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { medalArt, normalizeRedditUsername, ownView, parseClaimId, publicClaim, publicVerification } from '#/domain'
+import { claimPreview, claimPreviewPath } from '#/server/claimPreview'
 import { config, devLoginEnabled } from '#/server/config'
 import { getClaim, getClaimBySteamKey, getVerification } from '#/server/db'
 import { nextRefreshAt } from '#/server/link'
@@ -27,11 +28,12 @@ export const getClaimPage = createServerFn({ method: 'GET' })
     const id = parseClaimId(data)
     const claim = id === null ? null : await getClaim(id)
     if (!claim) return null
+    const shown = publicClaim(claim)
     return {
-      claim: publicClaim(claim),
+      claim: shown,
       isOwner: signedInSteam(readSession())?.steamKey === claim.steamKey,
       nextRefreshAt: nextRefreshAt(claim.checkedAt),
-      ogImage: `${config.publicUrl}${medalArt(claim.medal).icon}`,
+      ogImage: `${config.publicUrl}${claimPreviewPath(claim.id, claimPreview(shown))}`,
     }
   })
 

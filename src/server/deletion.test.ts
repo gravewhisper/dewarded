@@ -10,6 +10,8 @@ const DB_PATH = join(mkdtempSync(join(tmpdir(), 'dewarded-deletion-')), 'test.db
 process.env.DATABASE_URL = `file:${DB_PATH}`
 const db = await import('./db.ts')
 const { deleteIfConfirmed } = await import('./deletion.ts')
+const { claimImage } = await import('./claimImage.tsx')
+const IMAGE_DIR = join(dirname(DB_PATH), 'og')
 
 const check = (steamKey: SteamKey): SteamCheck => ({
   steamKey,
@@ -64,6 +66,22 @@ test('a deleted claim leaves none of its bytes in the database file', async () =
   assert.deepEqual(traces.filter((trace) => readFileSync(DB_PATH).includes(trace)), traces)
   assert.equal(await deleteIfConfirmed(form({ confirm: 'yes' }), async () => ({ steamKey })), 'deleted')
   assert.deepEqual(traces.filter((trace) => readFileSync(DB_PATH).includes(trace)), [])
+})
+
+test('a page loses its link-preview images when it changes and when it is deleted', async () => {
+  const steamKey = '7'.repeat(64) as SteamKey
+  const id = await db.saveClaim(check(steamKey), 'pictured_name')
+  const images = () => readdirSync(IMAGE_DIR).filter((file) => file.startsWith(id))
+  const first = await claimImage(id)
+  assert.ok(first && first !== 'busy')
+  assert.deepEqual(images(), [`${id}-${first.version}.png`])
+  await db.renameClaim(steamKey, 'renamed_name')
+  assert.deepEqual(images(), [])
+  await claimImage(id)
+  assert.equal(images().length, 1)
+  assert.equal(await deleteIfConfirmed(form({ confirm: 'yes' }), async () => ({ steamKey })), 'deleted')
+  assert.deepEqual(images(), [])
+  assert.equal(await claimImage(id), null)
 })
 
 const databaseFiles = () =>

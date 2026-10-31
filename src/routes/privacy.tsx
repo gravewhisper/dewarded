@@ -114,8 +114,11 @@ function SharedSections({ copy }: { copy: ModeCopy }) {
         Your record stays until you delete it. Deleting it removes it from the live database at
         once, but Fly.io's daily backups of the database can keep it for up to 14 days. Your last
         medal check and the hash also stay in server memory for up to an hour after the check,
-        even if you delete your record. Refreshing your medal replaces the old medal, leaderboard
-        rank, region and check date, so no history builds up.
+        even if you delete your record. The preview image shown when someone shares a link to your
+        page, with your Reddit name and medal, is stored on the server until you delete your page
+        or it changes, and the same daily backups can keep it for up to 14 days. Refreshing your
+        medal replaces the old medal, leaderboard rank, region and check date, so no history
+        builds up.
       </p>
       <p>
         The server also logs each request's method, path, status and response time, and any server
